@@ -1,4 +1,4 @@
-const { useEffect, useMemo, useRef, useState } = React;
+const { useEffect, useMemo, useRef, useState, forwardRef, useImperativeHandle } = React;
 
 /* ========= Utilidades ========= */
 function canFullscreen() {
@@ -95,13 +95,12 @@ function StageBackground({ backgroundMap, defaultBackground, currentPage }) {
   );
 }
 
-/* ========= GESTOR DE AUDIO (CON LÓGICA DE SFX ACTUALIZADA) ========= */
+/* ========= GESTOR DE AUDIO ========= */
 function AudioManager({ backgroundTrack, sfxMap, currentPage }) {
   const bgmAudioRef = useRef(null);
   const sfxAudioRef = useRef(null);
   const currentSfxUrl = useRef(null);
   const fadeInterval = useRef(null);
-
   const [isMuted, setIsMuted] = useState(false);
   const [hasInteracted, setHasInteracted] = useState(false);
   
@@ -207,8 +206,40 @@ function AudioManager({ backgroundTrack, sfxMap, currentPage }) {
   );
 }
 
+/* ========= Pantalla de Carga ========= */
+function LoadingScreen() {
+  return (
+    <div className="loading-screen">
+      Loading...
+    </div>
+  );
+}
+
+/* ========= Barra de Navegación ========= */
+function NavBar({ onNavigate }) {
+  const navLinks = [
+    { label: 'Cover', page: 0 },
+    { label: 'E', page: 1 },         // l1
+    { label: 'Mkins', page: 7 },    // l4 -> (4*2)-1 = 7
+    { label: 'Krag', page: 15 },     // l8 -> (8*2)-1 = 15
+    { label: 'Seven', page: 23 },    // l12 -> (12*2)-1 = 23
+    { label: 'Sylas', page: 31 },    // l16 -> (16*2)-1 = 31
+    { label: 'Green City', page: 37 }, // l19 -> (19*2)-1 = 37
+  ];
+
+  return (
+    <footer className="nav-bar">
+      {navLinks.map(({ label, page }) => (
+        <button key={label} className="btn" onClick={() => onNavigate(page)}>
+          {label}
+        </button>
+      ))}
+    </footer>
+  );
+}
+
 /* ========= FLIPBOOK ========= */
-function FlipBook({ pagePairsCount = 24, pathPrefix = 'assets/', onPageFlip = () => {}, currentPage = 0 }) {
+const FlipBook = forwardRef(({ pagePairsCount = 24, pathPrefix = 'assets/', onPageFlip = () => {}, currentPage = 0 }, ref) => {
   const stageRef = useRef(null);
   const hostRef = useRef(null);
   const pageFlipRef = useRef(null);
@@ -222,17 +253,27 @@ function FlipBook({ pagePairsCount = 24, pathPrefix = 'assets/', onPageFlip = ()
   useResizeTarget(stageRef);
   const pagesSrc = useMemo(() => {
     const sources = [];
-    sources.push(`${pathPrefix}cover.webp`);
+    sources.push(`${pathPrefix}cover.png`);
     for (let i = 1; i <= pagePairsCount; i++) {
-      sources.push(`${pathPrefix}l${i}.webp`);
-      sources.push(`${pathPrefix}r${i}.webp`);
+      sources.push(`${pathPrefix}l${i}.png`);
+      sources.push(`${pathPrefix}r${i}.png`);
     }
-    sources.push(`${pathPrefix}back.webp`);
+    sources.push(`${pathPrefix}back.png`);
     return sources;
   }, [pagePairsCount, pathPrefix]);
-  useEffect(() => {
-    pagesSrc.forEach(src => new Image().src = src);
-  }, [pagesSrc]);
+
+  useImperativeHandle(ref, () => ({
+    flipToPage(pageNumber) {
+      if (pageFlipRef.current) {
+        if (currentPage === 0 && !isBookPrepared && pageNumber > 0) {
+            handlePrepareBook(null, () => pageFlipRef.current.flip(pageNumber));
+        } else {
+            pageFlipRef.current.flip(pageNumber);
+        }
+      }
+    }
+  }));
+
   useEffect(() => {
     let cancelled = false;
     function init() {
@@ -285,6 +326,7 @@ function FlipBook({ pagePairsCount = 24, pathPrefix = 'assets/', onPageFlip = ()
     init();
     return () => { cancelled = true; };
   }, [pagesSrc, onPageFlip, pathPrefix]);
+
   useEffect(() => {
     function onResize() {
       if (!stageRef.current || !pageFlipRef.current) return;
@@ -302,6 +344,7 @@ function FlipBook({ pagePairsCount = 24, pathPrefix = 'assets/', onPageFlip = ()
       window.removeEventListener('resize', onResize);
     };
   }, []);
+
   useEffect(() => {
     if (!hostRef.current || !pageFlipRef.current || !bookSize.w) return;
     const totalPages = pageFlipRef.current.getPageCount();
@@ -318,47 +361,35 @@ function FlipBook({ pagePairsCount = 24, pathPrefix = 'assets/', onPageFlip = ()
         bookElement.style.transform = 'translateX(0)';
     }
   }, [currentPage, bookSize, ready]);
-  const handlePrepareBook = (e) => {
-    e.stopPropagation();
-    // Ensure we only run this once and the required elements exist.
+
+  const handlePrepareBook = (e, onComplete = null) => {
+    e?.stopPropagation();
     if (!isBookPrepared && hostRef.current && pageFlipRef.current) {
       const bookElement = hostRef.current;
-
-      // Define what should happen AFTER the slide animation finishes.
       const onSlideComplete = () => {
-        // Now that the book is centered, flip the cover.
-        pageFlipRef.current?.flipNext();
-        // The event listener is self-removing because of { once: true },
-        // so no manual cleanup is needed here.
+        if (onComplete) {
+          onComplete();
+        } else {
+          pageFlipRef.current?.flipNext();
+        }
       };
-
-      // Listen for the 'transitionend' event on the book element.
-      // The { once: true } option is crucial: it automatically removes the listener
-      // after it fires, preventing it from triggering on future transitions.
       bookElement.addEventListener('transitionend', onSlideComplete, { once: true });
-      
-      // 1. Immediately update the state. This will remove the click-interceptor div.
       setIsBookPrepared(true);
-
-      // 2. Start the slide animation by changing the CSS transform property.
-      // The 'transitionend' event will fire when this is done.
       bookElement.style.transform = 'translateX(0)';
     }
   };
-
-const handleFlipNext = () => {
+  
+  const handleFlipNext = () => {
     if (isFlipping || !pageFlipRef.current) return;
-
     const totalPages = pageFlipRef.current.getPageCount();
-    
-    // Si estamos en la última página (índice totalPages - 1), volvemos a la portada (índice 0).
     if (currentPage === totalPages - 1) {
       pageFlipRef.current.flip(0);
     } else {
-      // De lo contrario, simplemente pasamos a la siguiente página.
       pageFlipRef.current.flipNext();
     }
-};  const handleFlipPrev = () => { if (!isFlipping) pageFlipRef.current?.flipPrev(); };
+  };
+  const handleFlipPrev = () => { if (!isFlipping) pageFlipRef.current?.flipPrev(); };
+
   useEffect(() => {
     function onKey(e) {
       if (e.key === 'ArrowRight') {
@@ -380,8 +411,6 @@ const handleFlipNext = () => {
   
   const showInterceptor = currentPage === 0 && !isBookPrepared && ready;
 
-  // ******** LA CORRECCIÓN DEFINITIVA ESTÁ AQUÍ ********
-  // El return ahora solo contiene el canvas principal y el libro.
   return (
     <main ref={stageRef} className="stage">
         <div className="book-wrapper">
@@ -390,52 +419,80 @@ const handleFlipNext = () => {
         </div>
     </main>
   );
-}
+});
 
 /* ========= App ========= */
 function App() {
   const PAGE_PAIRS = 24;
   const ASSETS_PATH = "assets/";
   const [currentPage, setCurrentPage] = useState(0);
+  const [isLoading, setIsLoading] = useState(true);
+  const bookApiRef = useRef(null);
 
   const backgroundMap = {
-    0: `${ASSETS_PATH}bg1.png`,
-    5: `${ASSETS_PATH}bg5.webp`,
-    10: `${ASSETS_PATH}bg10.webp`,
-    10: `${ASSETS_PATH}bg10.webp`,
-    17: `${ASSETS_PATH}bgrocks.webp`,
-    25: `${ASSETS_PATH}bgcity.webp`,
-    33: `${ASSETS_PATH}bgforest.webp`,
-    39: `${ASSETS_PATH}bggreen.webp`,
-    43: `${ASSETS_PATH}bgred.webp`,
-    45: `${ASSETS_PATH}bggreen.webp`,
-    47: `${ASSETS_PATH}b1.webp`,
+    0: `${ASSETS_PATH}bg1.jpg`, 5: `${ASSETS_PATH}bg5.png`,
+    10: `${ASSETS_PATH}bg10.png`, 17: `${ASSETS_PATH}bgrocks.png`,
+    25: `${ASSETS_PATH}bgcity.png`, 33: `${ASSETS_PATH}bgforest.png`,
+    39: `${ASSETS_PATH}bggreen.png`, 43: `${ASSETS_PATH}bgred.png`,
+    45: `${ASSETS_PATH}bggreen.png`, 47: `${ASSETS_PATH}b1.png`,
   };
   const defaultBackground = null;
-
-  useEffect(() => {
-    Object.values(backgroundMap).forEach(url => {
-      if (url) {
-        new Image().src = url;
-      }
-    });
-  }, []);
 
   const backgroundTrack = `${ASSETS_PATH}background.mp3`;
   
   const sfxMap = {
-    0: null,
-    1: `${ASSETS_PATH}regular.mp3`,
-    5: `${ASSETS_PATH}crash.mp3`,
-    7: `${ASSETS_PATH}mkin.mp3`,
-    17: `${ASSETS_PATH}krag.mp3`,
-    27: `${ASSETS_PATH}robot.mp3`,
-    33: `${ASSETS_PATH}cry.mp3`,
-    39: `${ASSETS_PATH}boop.mp3`,
-    43: `${ASSETS_PATH}error.mp3`,
-    45: `${ASSETS_PATH}green.mp3`,
+    0: null, 1: `${ASSETS_PATH}regular.mp3`,
+    5: `${ASSETS_PATH}crash.mp3`, 7: `${ASSETS_PATH}mkin.mp3`,
+    17: `${ASSETS_PATH}krag.mp3`, 27: `${ASSETS_PATH}robot.mp3`,
+    33: `${ASSETS_PATH}cry.mp3`, 39: `${ASSETS_PATH}boop.mp3`,
+    43: `${ASSETS_PATH}error.mp3`, 45: `${ASSETS_PATH}green.mp3`,
     48: null,
   };
+
+  useEffect(() => {
+    const preloadAssets = async () => {
+      const imageSources = [
+        ...Object.values(backgroundMap).filter(Boolean),
+        `${ASSETS_PATH}cover.png`, `${ASSETS_PATH}back.png`
+      ];
+      for (let i = 1; i <= PAGE_PAIRS; i++) {
+        imageSources.push(`${ASSETS_PATH}l${i}.png`);
+        imageSources.push(`${ASSETS_PATH}r${i}.png`);
+      }
+      
+      const audioSources = [
+        ...Object.values(sfxMap).filter(Boolean),
+        backgroundTrack, `${ASSETS_PATH}page-flip.mp3`, `${ASSETS_PATH}cover.mp3`,
+      ];
+
+      const imagePromises = imageSources.map(src => new Promise((resolve) => {
+          const img = new Image();
+          img.src = src;
+          img.onload = resolve;
+          img.onerror = resolve; 
+      }));
+
+      const audioPromises = audioSources.map(src => new Promise((resolve) => {
+          const audio = new Audio();
+          audio.src = src;
+          audio.addEventListener('canplaythrough', resolve, { once: true });
+          audio.addEventListener('error', resolve, { once: true });
+      }));
+
+      await Promise.all([...imagePromises, ...audioPromises]);
+      setIsLoading(false);
+    };
+
+    preloadAssets();
+  }, []);
+
+  const handleNavigate = (pageNumber) => {
+    bookApiRef.current?.flipToPage(pageNumber);
+  };
+
+  if (isLoading) {
+    return <LoadingScreen />;
+  }
 
   return (
     <>
@@ -445,6 +502,7 @@ function App() {
         currentPage={currentPage}
       />
       <FlipBook
+        ref={bookApiRef}
         pagePairsCount={PAGE_PAIRS}
         pathPrefix={ASSETS_PATH}
         onPageFlip={setCurrentPage}
@@ -455,6 +513,7 @@ function App() {
         sfxMap={sfxMap}
         currentPage={currentPage}
       />
+      <NavBar onNavigate={handleNavigate} />
     </>
   );
 }
