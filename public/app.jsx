@@ -1,0 +1,442 @@
+const { useEffect, useMemo, useRef, useState } = React;
+
+/* ========= Utilidades ========= */
+function canFullscreen() {
+  return !!(document.fullscreenEnabled || document.webkitFullscreenEnabled || document.msFullscreenEnabled);
+}
+
+function computePageSize(containerW, containerH) {
+  const pageRatio = 8.5 / 11;
+  const bookRatio = pageRatio * 2;
+  if (!containerW || !containerH) return { w: 0, h: 0 };
+  if (containerW / containerH > bookRatio) {
+    const h = Math.floor(containerH * 0.96);
+    const w = Math.floor(h * pageRatio);
+    return { w, h };
+  } else {
+    const w_total = Math.floor(containerW * 0.96);
+    const w = Math.floor(w_total / 2);
+    const h = Math.floor(w / pageRatio);
+    return { w, h };
+  }
+}
+
+function useResizeTarget(ref) {
+  const [, force] = useState(0);
+  useEffect(() => {
+    if (!ref.current) return;
+    const ro = new ResizeObserver(() => force(x => x + 1));
+    ro.observe(ref.current);
+    return () => ro.disconnect();
+  }, [ref]);
+}
+
+async function enterFullscreen(el) {
+  try {
+    if (el.requestFullscreen) return await el.requestFullscreen();
+    if (el.webkitRequestFullscreen) return await el.webkitRequestFullscreen();
+    if (el.msRequestFullscreen) return await el.msRequestFullscreen();
+  } catch (e) { console.warn('Fullscreen request failed:', e); }
+}
+
+async function exitFullscreen() {
+  try {
+    if (document.exitFullscreen) return await document.exitFullscreen();
+    if (document.webkitExitFullscreen) return await document.webkitExitFullscreen();
+    if (document.msExitFullscreen) return await document.msExitFullscreen();
+  } catch (e) { console.warn('Exit fullscreen failed:', e); }
+}
+
+/* ========= GESTOR DE FONDOS ========= */
+function StageBackground({ backgroundMap, defaultBackground, currentPage }) {
+  const [layers, setLayers] = useState([
+    { url: defaultBackground, visible: true },
+    { url: null, visible: false },
+  ]);
+  const activeLayerIndex = useRef(0);
+
+  useEffect(() => {
+    let targetUrl = defaultBackground;
+    for (let i = currentPage; i >= 0; i--) {
+      if (backgroundMap.hasOwnProperty(i)) {
+        targetUrl = backgroundMap[i];
+        break;
+      }
+    }
+
+    const visibleLayer = layers[activeLayerIndex.current];
+    if (visibleLayer.url === targetUrl) return;
+
+    const hiddenLayerIndex = 1 - activeLayerIndex.current;
+    activeLayerIndex.current = hiddenLayerIndex;
+
+    setLayers(prevLayers => {
+      const newLayers = [...prevLayers];
+      newLayers[hiddenLayerIndex] = { url: targetUrl, visible: true };
+      newLayers[1 - hiddenLayerIndex] = { ...newLayers[1 - hiddenLayerIndex], visible: false };
+      return newLayers;
+    });
+
+  }, [currentPage, backgroundMap, defaultBackground]);
+
+  return (
+    <div className="stage-background">
+      {layers.map((layer, index) => (
+        <div
+          key={index}
+          className="bg-layer"
+          style={{
+            backgroundImage: layer.url ? `url(${layer.url})` : 'none',
+            opacity: layer.visible ? 1 : 0,
+          }}
+        />
+      ))}
+    </div>
+  );
+}
+
+/* ========= GESTOR DE AUDIO (CON LÓGICA DE SFX ACTUALIZADA) ========= */
+function AudioManager({ backgroundTrack, sfxMap, currentPage }) {
+  const bgmAudioRef = useRef(null);
+  const sfxAudioRef = useRef(null);
+  const currentSfxUrl = useRef(null);
+  const fadeInterval = useRef(null);
+
+  const [isMuted, setIsMuted] = useState(false);
+  const [hasInteracted, setHasInteracted] = useState(false);
+  
+  const fadeAudio = (audioEl, targetVolume, duration = 1000, onComplete = null) => {
+    clearInterval(fadeInterval.current);
+    if (!audioEl) return;
+    const startVolume = audioEl.volume;
+    const stepTime = 50;
+    const steps = duration / stepTime;
+    const volumeStep = (targetVolume - startVolume) / steps;
+    let currentStep = 0;
+    fadeInterval.current = setInterval(() => {
+      currentStep++;
+      if (currentStep >= steps) {
+        audioEl.volume = targetVolume;
+        clearInterval(fadeInterval.current);
+        if (onComplete) onComplete();
+      } else {
+        audioEl.volume += volumeStep;
+      }
+    }, stepTime);
+  };
+
+  useEffect(() => {
+    const startAudio = async () => {
+      if (hasInteracted) return;
+      setHasInteracted(true);
+      if (bgmAudioRef.current) {
+        try {
+          bgmAudioRef.current.volume = 0.2;
+          await bgmAudioRef.current.play();
+        } catch (error) { console.warn("La reproducción automática de BGM fue bloqueada."); }
+      }
+      window.removeEventListener('click', startAudio);
+      window.removeEventListener('keydown', startAudio);
+    };
+    window.addEventListener('click', startAudio);
+    window.addEventListener('keydown', startAudio);
+    return () => {
+      window.removeEventListener('click', startAudio);
+      window.removeEventListener('keydown', startAudio);
+    };
+  }, [hasInteracted]);
+
+  useEffect(() => {
+    if (!hasInteracted || isMuted) return;
+
+    let targetSfxUrl = null;
+    for (let i = currentPage; i >= 0; i--) {
+      if (sfxMap.hasOwnProperty(i)) {
+        targetSfxUrl = sfxMap[i];
+        break;
+      }
+    }
+
+    if (targetSfxUrl === currentSfxUrl.current) return;
+
+    const sfxPlayer = sfxAudioRef.current;
+    
+    const playNewTrack = () => {
+        currentSfxUrl.current = targetSfxUrl;
+        if (targetSfxUrl) {
+            sfxPlayer.src = targetSfxUrl;
+            sfxPlayer.loop = true;
+            sfxPlayer.play().catch(err => console.error("SFX play failed:", err));
+            fadeAudio(sfxPlayer, 0.6, 1000);
+        }
+    };
+
+    if (currentSfxUrl.current) {
+        fadeAudio(sfxPlayer, 0, 1000, () => {
+            sfxPlayer.pause();
+            playNewTrack();
+        });
+    } else {
+        playNewTrack();
+    }
+
+  }, [currentPage, hasInteracted, isMuted, sfxMap]);
+
+  const toggleMute = () => {
+    const newMutedState = !isMuted;
+    setIsMuted(newMutedState);
+    if (bgmAudioRef.current) bgmAudioRef.current.muted = newMutedState;
+    if (sfxAudioRef.current) sfxAudioRef.current.muted = newMutedState;
+    if (!newMutedState && bgmAudioRef.current && bgmAudioRef.current.paused) {
+      bgmAudioRef.current.play().catch(e => console.warn("No se pudo reanudar BGM", e));
+    }
+  };
+
+  return (
+    <>
+      <audio ref={bgmAudioRef} src={backgroundTrack} loop preload="auto" />
+      <audio ref={sfxAudioRef} preload="auto" />
+      {hasInteracted && (
+        <div className="music-control">
+          <button className="btn" onClick={toggleMute} title={isMuted ? "Activar sonido" : "Silenciar sonido"}>
+            {isMuted ? '🔇' : '🔊'}
+          </button>
+        </div>
+      )}
+    </>
+  );
+}
+
+/* ========= FLIPBOOK ========= */
+function FlipBook({ pagePairsCount = 24, pathPrefix = 'assets/', onPageFlip = () => {}, currentPage = 0 }) {
+  const stageRef = useRef(null);
+  const hostRef = useRef(null);
+  const pageFlipRef = useRef(null);
+  const [fsAvail] = useState(canFullscreen());
+  const [ready, setReady] = useState(false);
+  const [isFlipping, setIsFlipping] = useState(false);
+  const [bookSize, setBookSize] = useState({ w: 0, h: 0 });
+  const [isBookPrepared, setIsBookPrepared] = useState(false);
+  const pageFlipAudioRef = useRef(null);
+  const coverAudioRef = useRef(null);
+  useResizeTarget(stageRef);
+  const pagesSrc = useMemo(() => {
+    const sources = [];
+    sources.push(`${pathPrefix}cover.png`);
+    for (let i = 1; i <= pagePairsCount; i++) {
+      sources.push(`${pathPrefix}l${i}.png`);
+      sources.push(`${pathPrefix}r${i}.png`);
+    }
+    sources.push(`${pathPrefix}back.png`);
+    return sources;
+  }, [pagePairsCount, pathPrefix]);
+  useEffect(() => {
+    pagesSrc.forEach(src => new Image().src = src);
+  }, [pagesSrc]);
+  useEffect(() => {
+    let cancelled = false;
+    function init() {
+      if (!hostRef.current || pageFlipRef.current) return;
+      const r = stageRef.current?.getBoundingClientRect?.();
+      if (!r || !r.width || !r.height) return requestAnimationFrame(init);
+      const { w, h } = computePageSize(r.width, r.height);
+      if (!w || !h) return requestAnimationFrame(init);
+      setBookSize({ w, h });
+      const pageElements = pagesSrc.map(src => {
+        const pageDiv = document.createElement('div');
+        pageDiv.className = 'page';
+        const img = document.createElement('img');
+        img.src = src;
+        img.draggable = false;
+        pageDiv.appendChild(img);
+        return pageDiv;
+      });
+      pageFlipRef.current = new St.PageFlip(hostRef.current, {
+        width: w, height: h,
+        usePortrait: false, showCover: true, mobileScrollSupport: true,
+        flippingTime: 800, maxShadowOpacity: 0.7, useMouseEvents: true,
+      });
+      pageFlipRef.current.loadFromHTML(pageElements);
+      pageFlipAudioRef.current = new Audio(`${pathPrefix}page-flip.mp3`);
+      coverAudioRef.current = new Audio(`${pathPrefix}cover.mp3`);
+      pageFlipRef.current.on('changeState', (e) => {
+        if (e.data === 'flipping') {
+          setIsFlipping(true);
+          const api = pageFlipRef.current;
+          const cp = api.getCurrentPageIndex();
+          if (cp <= 1 || cp >= api.getPageCount() - 2) {
+             const sound = coverAudioRef.current.cloneNode();
+             sound.volume = 0.5;
+             sound.play().catch(err => { if (err.name !== 'NotAllowedError') console.error("Audio play failed:", err); });
+          } else {
+             const sound = pageFlipAudioRef.current.cloneNode();
+             sound.volume = 0.5;
+             sound.play().catch(err => { if (err.name !== 'NotAllowedError') console.error("Audio play failed:", err); });
+          }
+        }
+      });
+      pageFlipRef.current.on('flip', (e) => {
+        setIsFlipping(false);
+        onPageFlip(e.data);
+      });
+      hostRef.current.classList.add('frame');
+      if (!cancelled) setReady(true);
+    }
+    init();
+    return () => { cancelled = true; };
+  }, [pagesSrc, onPageFlip, pathPrefix]);
+  useEffect(() => {
+    function onResize() {
+      if (!stageRef.current || !pageFlipRef.current) return;
+      const rect = stageRef.current.getBoundingClientRect();
+      const { w, h } = computePageSize(rect.width, rect.height);
+      if (w && h) {
+        pageFlipRef.current.update({ width: w, height: h });
+        setBookSize({ w, h });
+      }
+    }
+    window.addEventListener('resize', onResize);
+    const id = requestAnimationFrame(onResize);
+    return () => {
+      cancelAnimationFrame(id);
+      window.removeEventListener('resize', onResize);
+    };
+  }, []);
+  useEffect(() => {
+    if (!hostRef.current || !pageFlipRef.current || !bookSize.w) return;
+    const totalPages = pageFlipRef.current.getPageCount();
+    const isClosedAtStart = currentPage === 0;
+    const isClosedAtEnd = currentPage === totalPages - 1;
+    const bookElement = hostRef.current;
+    if (isClosedAtStart) {
+        setIsBookPrepared(false);
+        bookElement.style.transform = `translateX(-${bookSize.w / 2}px)`;
+    } else if (isClosedAtEnd) {
+        bookElement.style.transform = `translateX(${bookSize.w / 2}px)`;
+    } else {
+        setIsBookPrepared(true);
+        bookElement.style.transform = 'translateX(0)';
+    }
+  }, [currentPage, bookSize, ready]);
+  const handlePrepareBook = (e) => {
+    e.stopPropagation();
+    if (!isBookPrepared && hostRef.current) {
+      hostRef.current.style.transform = 'translateX(0)';
+      setIsBookPrepared(true);
+    }
+  };
+const handleFlipNext = () => {
+    if (isFlipping || !pageFlipRef.current) return;
+
+    const totalPages = pageFlipRef.current.getPageCount();
+    
+    // Si estamos en la última página (índice totalPages - 1), volvemos a la portada (índice 0).
+    if (currentPage === totalPages - 1) {
+      pageFlipRef.current.flip(0);
+    } else {
+      // De lo contrario, simplemente pasamos a la siguiente página.
+      pageFlipRef.current.flipNext();
+    }
+};  const handleFlipPrev = () => { if (!isFlipping) pageFlipRef.current?.flipPrev(); };
+  useEffect(() => {
+    function onKey(e) {
+      if (e.key === 'ArrowRight') {
+        if (currentPage === 0 && !isBookPrepared) {
+            handlePrepareBook(e);
+        } else {
+            handleFlipNext();
+        }
+      } else if (e.key === 'ArrowLeft') {
+        handleFlipPrev();
+      } else if (e.key.toLowerCase?.() === 'f' && fsAvail) {
+        if (!document.fullscreenElement) enterFullscreen(document.documentElement);
+        else exitFullscreen();
+      }
+    }
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [fsAvail, isFlipping, currentPage, isBookPrepared]);
+  
+  const showInterceptor = currentPage === 0 && !isBookPrepared && ready;
+
+  // ******** LA CORRECCIÓN DEFINITIVA ESTÁ AQUÍ ********
+  // El return ahora solo contiene el canvas principal y el libro.
+  return (
+    <main ref={stageRef} className="stage">
+        <div className="book-wrapper">
+          {showInterceptor && <div className="click-interceptor" onClick={handlePrepareBook} />}
+          <div id="book" ref={hostRef}></div>
+        </div>
+    </main>
+  );
+}
+
+/* ========= App ========= */
+function App() {
+  const PAGE_PAIRS = 24;
+  const ASSETS_PATH = "assets/";
+  const [currentPage, setCurrentPage] = useState(0);
+
+  const backgroundMap = {
+    0: `${ASSETS_PATH}bg1.jpg`,
+    5: `${ASSETS_PATH}bg5.png`,
+    10: `${ASSETS_PATH}bg10.png`,
+    10: `${ASSETS_PATH}bg10.png`,
+    17: `${ASSETS_PATH}bgrocks.png`,
+    25: `${ASSETS_PATH}bgcity.png`,
+    33: `${ASSETS_PATH}bgforest.png`,
+    39: `${ASSETS_PATH}bggreen.png`,
+    43: `${ASSETS_PATH}bgred.png`,
+    45: `${ASSETS_PATH}bggreen.png`,
+    47: `${ASSETS_PATH}b1.png`,
+  };
+  const defaultBackground = null;
+
+  useEffect(() => {
+    Object.values(backgroundMap).forEach(url => {
+      if (url) {
+        new Image().src = url;
+      }
+    });
+  }, []);
+
+  const backgroundTrack = `${ASSETS_PATH}background.mp3`;
+  
+  const sfxMap = {
+    0: null,
+    1: `${ASSETS_PATH}regular.mp3`,
+    5: `${ASSETS_PATH}crash.mp3`,
+    7: `${ASSETS_PATH}mkin.mp3`,
+    17: `${ASSETS_PATH}krag.mp3`,
+    27: `${ASSETS_PATH}robot.mp3`,
+    33: `${ASSETS_PATH}cry.mp3`,
+    39: `${ASSETS_PATH}boop.mp3`,
+    43: `${ASSETS_PATH}error.mp3`,
+    45: `${ASSETS_PATH}green.mp3`,
+    48: null,
+  };
+
+  return (
+    <>
+      <StageBackground
+        backgroundMap={backgroundMap}
+        defaultBackground={defaultBackground}
+        currentPage={currentPage}
+      />
+      <FlipBook
+        pagePairsCount={PAGE_PAIRS}
+        pathPrefix={ASSETS_PATH}
+        onPageFlip={setCurrentPage}
+        currentPage={currentPage}
+      />
+      <AudioManager
+        backgroundTrack={backgroundTrack}
+        sfxMap={sfxMap}
+        currentPage={currentPage}
+      />
+    </>
+  );
+}
+
+const root = ReactDOM.createRoot(document.getElementById('root'));
+root.render(<App />);
