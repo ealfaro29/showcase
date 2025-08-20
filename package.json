@@ -1,0 +1,12 @@
+{
+  "name": "flipbook-react-node",
+  "version": "1.0.0",
+  "private": true,
+  "description": "11x17 Comic Flipbook - React + Node (sin bundlers)",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "dependencies": {
+    "express": "^4.19.2"
+  }
+}
