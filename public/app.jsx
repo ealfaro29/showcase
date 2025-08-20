@@ -253,12 +253,12 @@ const FlipBook = forwardRef(({ pagePairsCount = 24, pathPrefix = 'assets/', onPa
   useResizeTarget(stageRef);
   const pagesSrc = useMemo(() => {
     const sources = [];
-    sources.push(`${pathPrefix}cover.png`);
+    sources.push(`${pathPrefix}cover.webp`);
     for (let i = 1; i <= pagePairsCount; i++) {
-      sources.push(`${pathPrefix}l${i}.png`);
-      sources.push(`${pathPrefix}r${i}.png`);
+      sources.push(`${pathPrefix}l${i}.webp`);
+      sources.push(`${pathPrefix}r${i}.webp`);
     }
-    sources.push(`${pathPrefix}back.png`);
+    sources.push(`${pathPrefix}back.webp`);
     return sources;
   }, [pagePairsCount, pathPrefix]);
 
@@ -430,11 +430,11 @@ function App() {
   const bookApiRef = useRef(null);
 
   const backgroundMap = {
-    0: `${ASSETS_PATH}bg1.jpg`, 5: `${ASSETS_PATH}bg5.png`,
-    10: `${ASSETS_PATH}bg10.png`, 17: `${ASSETS_PATH}bgrocks.png`,
-    25: `${ASSETS_PATH}bgcity.png`, 33: `${ASSETS_PATH}bgforest.png`,
-    39: `${ASSETS_PATH}bggreen.png`, 43: `${ASSETS_PATH}bgred.png`,
-    45: `${ASSETS_PATH}bggreen.png`, 47: `${ASSETS_PATH}b1.png`,
+    0: `${ASSETS_PATH}bg1.webp`, 5: `${ASSETS_PATH}bg5.webp`,
+    10: `${ASSETS_PATH}bg10.webp`, 17: `${ASSETS_PATH}bgrocks.webp`,
+    25: `${ASSETS_PATH}bgcity.webp`, 33: `${ASSETS_PATH}bgforest.webp`,
+    39: `${ASSETS_PATH}bggreen.webp`, 43: `${ASSETS_PATH}bgred.webp`,
+    45: `${ASSETS_PATH}bggreen.webp`, 47: `${ASSETS_PATH}b1.webp`,
   };
   const defaultBackground = null;
 
@@ -453,11 +453,11 @@ function App() {
     const preloadAssets = async () => {
       const imageSources = [
         ...Object.values(backgroundMap).filter(Boolean),
-        `${ASSETS_PATH}cover.png`, `${ASSETS_PATH}back.png`
+        `${ASSETS_PATH}cover.webp`, `${ASSETS_PATH}back.webp`
       ];
       for (let i = 1; i <= PAGE_PAIRS; i++) {
-        imageSources.push(`${ASSETS_PATH}l${i}.png`);
-        imageSources.push(`${ASSETS_PATH}r${i}.png`);
+        imageSources.push(`${ASSETS_PATH}l${i}.webp`);
+        imageSources.push(`${ASSETS_PATH}r${i}.webp`);
       }
       
       const audioSources = [
