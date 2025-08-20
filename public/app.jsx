@@ -320,11 +320,32 @@ function FlipBook({ pagePairsCount = 24, pathPrefix = 'assets/', onPageFlip = ()
   }, [currentPage, bookSize, ready]);
   const handlePrepareBook = (e) => {
     e.stopPropagation();
-    if (!isBookPrepared && hostRef.current) {
-      hostRef.current.style.transform = 'translateX(0)';
+    // Ensure we only run this once and the required elements exist.
+    if (!isBookPrepared && hostRef.current && pageFlipRef.current) {
+      const bookElement = hostRef.current;
+
+      // Define what should happen AFTER the slide animation finishes.
+      const onSlideComplete = () => {
+        // Now that the book is centered, flip the cover.
+        pageFlipRef.current?.flipNext();
+        // The event listener is self-removing because of { once: true },
+        // so no manual cleanup is needed here.
+      };
+
+      // Listen for the 'transitionend' event on the book element.
+      // The { once: true } option is crucial: it automatically removes the listener
+      // after it fires, preventing it from triggering on future transitions.
+      bookElement.addEventListener('transitionend', onSlideComplete, { once: true });
+      
+      // 1. Immediately update the state. This will remove the click-interceptor div.
       setIsBookPrepared(true);
+
+      // 2. Start the slide animation by changing the CSS transform property.
+      // The 'transitionend' event will fire when this is done.
+      bookElement.style.transform = 'translateX(0)';
     }
   };
+
 const handleFlipNext = () => {
     if (isFlipping || !pageFlipRef.current) return;
 
