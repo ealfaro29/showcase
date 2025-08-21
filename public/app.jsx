@@ -218,21 +218,25 @@ function LoadingScreen({ progress, isHiding }) {
   );
 }
 
-/* ========= Barra de Navegación ========= */
-function NavBar({ onNavigate }) {
+/* ========= Barra de Navegación (LOGICA PROGRESIVA) ========= */
+function NavBar({ onNavigate, maxPageVisited }) {
   const navLinks = [
     { label: 'Cover', page: 0 },
-    { label: 'E', page: 3 },         // l1
-    { label: 'Mkins', page: 9 },    // l4 -> (4*2)-1 = 7
-    { label: 'Krag', page: 17 },     // l8 -> (8*2)-1 = 15
-    { label: 'Seven', page: 25 },    // l12 -> (12*2)-1 = 23
-    { label: 'Sylas', page: 33 },    // l16 -> (16*2)-1 = 31
-    { label: 'Green City', page: 39 }, // l19 -> (19*2)-1 = 37
+    { label: 'E', page: 3 },
+    { label: 'Mkins', page: 9 },
+    { label: 'Krag', page: 17 },
+    { label: 'Seven', page: 25 },
+    { label: 'Sylas', page: 33 },
+    { label: 'Green City', page: 39 },
   ];
 
+  // Only show the nav bar if the user has reached at least the first section after the cover
+  const isVisible = maxPageVisited >= navLinks[1].page;
+  const unlockedLinks = navLinks.filter(link => link.page <= maxPageVisited);
+  
   return (
-    <footer className="nav-bar">
-      {navLinks.map(({ label, page }) => (
+    <footer className="nav-bar" style={{ opacity: isVisible ? 1 : 0, pointerEvents: isVisible ? 'auto' : 'none' }}>
+      {unlockedLinks.map(({ label, page }) => (
         <button key={label} className="btn" onClick={() => onNavigate(page)}>
           {label}
         </button>
@@ -241,7 +245,7 @@ function NavBar({ onNavigate }) {
   );
 }
 
-/* ========= FLIPBOOK ========= */
+/* ========= FLIPBOOK (CON MARCADOR) ========= */
 const FlipBook = forwardRef(({ pagePairsCount = 24, pathPrefix = 'assets/', onPageFlip = () => {}, currentPage = 0 }, ref) => {
   const stageRef = useRef(null);
   const hostRef = useRef(null);
@@ -384,13 +388,14 @@ const FlipBook = forwardRef(({ pagePairsCount = 24, pathPrefix = 'assets/', onPa
     <main ref={stageRef} className="stage">
         <div className="book-wrapper">
           {showInterceptor && <div className="click-interceptor" onClick={handlePrepareBook} />}
+          {showInterceptor && <div className="click-marker">&lt; Click</div>}
           <div id="book" ref={hostRef}></div>
         </div>
     </main>
   );
 });
 
-/* ========= App ========= */
+/* ========= App (LOGICA DE NAVEGACION PROGRESIVA) ========= */
 function App() {
   const PAGE_PAIRS = 24;
   const ASSETS_PATH = "assets/";
@@ -399,6 +404,14 @@ function App() {
   const [loadingProgress, setLoadingProgress] = useState(0);
   const [isHidingLoader, setIsHidingLoader] = useState(false);
   const bookApiRef = useRef(null);
+  const [maxPageVisited, setMaxPageVisited] = useState(0);
+
+  // Update maxPageVisited whenever the currentPage changes
+  useEffect(() => {
+    if (currentPage > maxPageVisited) {
+      setMaxPageVisited(currentPage);
+    }
+  }, [currentPage]);
 
   const backgroundMap = {
     0: `${ASSETS_PATH}bg1.webp`, 5: `${ASSETS_PATH}bg5.webp`,
@@ -487,7 +500,10 @@ function App() {
         sfxMap={sfxMap}
         currentPage={currentPage}
       />
-      <NavBar onNavigate={handleNavigate} />
+      <NavBar 
+        onNavigate={handleNavigate}
+        maxPageVisited={maxPageVisited} 
+      />
     </>
   );
 }
