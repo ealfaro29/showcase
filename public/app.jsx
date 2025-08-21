@@ -222,12 +222,12 @@ function LoadingScreen({ progress, isHiding }) {
 function NavBar({ onNavigate }) {
   const navLinks = [
     { label: 'Cover', page: 0 },
-    { label: 'E', page: 1 },         // l1
-    { label: 'Mkins', page: 7 },    // l4 -> (4*2)-1 = 7
-    { label: 'Krag', page: 15 },     // l8 -> (8*2)-1 = 15
-    { label: 'Seven', page: 23 },    // l12 -> (12*2)-1 = 23
-    { label: 'Sylas', page: 31 },    // l16 -> (16*2)-1 = 31
-    { label: 'Green City', page: 37 }, // l19 -> (19*2)-1 = 37
+    { label: 'E', page: 3 },         // l1
+    { label: 'Mkins', page: 9 },    // l4 -> (4*2)-1 = 7
+    { label: 'Krag', page: 17 },     // l8 -> (8*2)-1 = 15
+    { label: 'Seven', page: 25 },    // l12 -> (12*2)-1 = 23
+    { label: 'Sylas', page: 33 },    // l16 -> (16*2)-1 = 31
+    { label: 'Green City', page: 39 }, // l19 -> (19*2)-1 = 37
   ];
 
   return (
