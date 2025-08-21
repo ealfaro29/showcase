@@ -210,7 +210,7 @@ function AudioManager({ backgroundTrack, sfxMap, currentPage }) {
 function LoadingScreen({ progress, isHiding }) {
   return (
     <div className={`loading-screen ${isHiding ? 'hidden' : ''}`}>
-      <h1>Showcase 2025</h1>
+      <h1>Broken Orbit - Showcase 2025</h1>
       <div className="progress-bar">
         <div className="progress-bar-inner" style={{ width: `${progress}%` }}></div>
       </div>
