@@ -10,11 +10,11 @@ function computePageSize(containerW, containerH) {
   const bookRatio = pageRatio * 2;
   if (!containerW || !containerH) return { w: 0, h: 0 };
   if (containerW / containerH > bookRatio) {
-    const h = Math.floor(containerH * 0.96);
+    const h = Math.floor(containerH * 0.90);
     const w = Math.floor(h * pageRatio);
     return { w, h };
   } else {
-    const w_total = Math.floor(containerW * 0.96);
+    const w_total = Math.floor(containerW * 0.90);
     const w = Math.floor(w_total / 2);
     const h = Math.floor(w / pageRatio);
     return { w, h };
