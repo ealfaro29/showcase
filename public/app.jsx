@@ -287,7 +287,7 @@ function NavBar({ onNavigate, maxPageVisited }) {
 
 /* ========= FLIPBOOK ========= */
 
-const FlipBook = forwardRef(({ pagePairsCount = 24, pathPrefix = 'assets/', onPageFlip = () => {}, currentPage = 0 }, ref) => {
+const FlipBook = forwardRef(({ pagePairsCount = 25, pathPrefix = 'assets/', onPageFlip = () => {}, currentPage = 0 }, ref) => {
   const stageRef = useRef(null);
   const hostRef = useRef(null);
   const pageFlipRef = useRef(null);
@@ -483,7 +483,7 @@ const FlipBook = forwardRef(({ pagePairsCount = 24, pathPrefix = 'assets/', onPa
 /* ========= APP PRINCIPAL ========= */
 
 function App() {
-  const PAGE_PAIRS = 24;
+  const PAGE_PAIRS = 25;
   const ASSETS_PATH = "assets/";
   const [currentPage, setCurrentPage] = useState(0);
   const [isLoading, setIsLoading] = useState(true);
