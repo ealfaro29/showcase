@@ -16,272 +16,78 @@
 
   <style>
     /* === ESTILOS BASE Y DE LAYOUT === */
-    :root {
-      color-scheme: dark;
-    }
-    html, body {
-      margin: 0;
-      width: 100vw;
-      height: 100vh;
-      overflow: hidden;
-      color: #e5e5e5;
-      font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial;
-    }
-    #root {
-      display: flex;
-      flex-direction: column;
-      height: 100%;
-    }
-    .stage {
-      flex-grow: 1;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      perspective: 2000px;
-      overflow: hidden;
-      background: transparent;
-    }
+    :root { color-scheme: dark; }
+    html, body { margin: 0; width: 100vw; height: 100vh; overflow: hidden; color: #e5e5e5; font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial; }
+    #root { display: flex; flex-direction: column; height: 100%; }
+    .stage { flex-grow: 1; display: flex; align-items: center; justify-content: center; perspective: 2000px; overflow: hidden; background: transparent; }
 
     /* === ESTILOS DEL LIBRO Y PÁGINAS === */
-    .book-wrapper {
-      position: relative;
-    }
-    #book {
-      transition: transform 0.6s cubic-bezier(0.65, 0, 0.35, 1);
-    }
-    .frame {
-      box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0);
-      background: #11111100;
-      border-radius: 2px;
-    }
-    .page {
-      width: 100%;
-      height: 100%;
-      background-color: #000000;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-    }
-    .page img {
-      display: block;
-      height: 100%;
-      user-select: none;
-      pointer-events: none;
-      width: 100%;
-      object-fit: cover;
-    }
-    .page:first-child img {
-      border-top-right-radius: 0px;
-      border-bottom-right-radius: 0px;
-    }
-    .page:last-child img {
-      border-top-left-radius: 0px;
-      border-bottom-left-radius: 0px;
-    }
-    .stf-page-image {
-      border: none !important;
-    }
-    .stf-shadow-forward, .stf-shadow-back {
-      background-image: linear-gradient(to right, rgba(0, 0, 0, 0.4) 0, rgba(0, 0, 0, 0) 100%) !important;
-    }
-    .stf-hard-forward .stf-hard-inner {
-      background-image: linear-gradient(to right, rgba(0, 0, 0, 0.4) 0, rgba(255, 255, 255, 0) 20%) !important;
-    }
-    .click-interceptor {
-      position: absolute;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-      z-index: 100;
-      cursor: pointer;
-    }
+    .book-wrapper { position: relative; }
+    #book { transition: transform 0.6s cubic-bezier(0.65, 0, 0.35, 1); }
+    .frame { box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0); background: #11111100; border-radius: 2px; }
+    .page { width: 100%; height: 100%; background-color: #000000; display: flex; justify-content: center; align-items: center; }
+    .page img { display: block; height: 100%; user-select: none; pointer-events: none; width: 100%; object-fit: cover; }
+    .page:first-child img { border-top-right-radius: 0px; border-bottom-right-radius: 0px; }
+    .page:last-child img { border-top-left-radius: 0px; border-bottom-left-radius: 0px; }
+    .stf-page-image { border: none !important; }
+    .stf-shadow-forward, .stf-shadow-back { background-image: linear-gradient(to right, rgba(0, 0, 0, 0.4) 0, rgba(0, 0, 0, 0) 100%) !important; }
+    .stf-hard-forward .stf-hard-inner { background-image: linear-gradient(to right, rgba(0, 0, 0, 0.4) 0, rgba(255, 255, 255, 0) 20%) !important; }
+    .click-interceptor { position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 100; cursor: pointer; }
     
     /* === ESTILOS DEL INDICADOR DE CLICK ESTÉTICO === */
-    @keyframes pulseGlow {
-      0%, 100% {
-        transform: scale(1) translateY(-50%);
-        opacity: 0.7;
-      }
-      50% {
-        transform: scale(1.1) translateY(-50%);
-        opacity: 1;
-      }
-    }
-    @keyframes slideLeft {
-      0% {
-        transform: translateX(8px);
-        opacity: 0;
-      }
-      50% {
-        opacity: 1;
-      }
-      100% {
-        transform: translateX(-8px);
-        opacity: 0;
-      }
-    }
-    .open-book-indicator {
-      position: absolute;
-      left: calc(50% + 250px);
-      top: 50%;
-      transform: translateY(-50%);
-      width: 60px;
-      height: 60px;
-      background: rgba(255, 255, 255, 0);
-      border-radius: 50%;
-      box-shadow: 0 0 15px rgba(255, 255, 255, 0);
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      pointer-events: none;
-      z-index: 101;
-      animation: pulseGlow 2.5s ease-in-out infinite;
-    }
-    .open-book-indicator .chevron {
-      font-size: 60px;
-      color: #00ce8d;
-      opacity: 0;
-      animation: slideLeft 1.5s ease-in-out infinite;
-    }
+    @keyframes pulseGlow { 0%, 100% { transform: scale(1) translateY(-50%); opacity: 0.7; } 50% { transform: scale(1.1) translateY(-50%); opacity: 1; } }
+    @keyframes slideLeft { 0% { transform: translateX(8px); opacity: 0; } 50% { opacity: 1; } 100% { transform: translateX(-8px); opacity: 0; } }
+    .open-book-indicator { position: absolute; left: calc(50% + 250px); top: 50%; transform: translateY(-50%); width: 60px; height: 60px; background: rgba(255, 255, 255, 0); border-radius: 50%; box-shadow: 0 0 15px rgba(255, 255, 255, 0); display: flex; justify-content: center; align-items: center; pointer-events: none; z-index: 101; animation: pulseGlow 2.5s ease-in-out infinite; }
+    .open-book-indicator .chevron { font-size: 60px; color: #00ce8d; opacity: 0; animation: slideLeft 1.5s ease-in-out infinite; }
     .open-book-indicator .chevron:nth-child(1) { animation-delay: 0.4s; }
     .open-book-indicator .chevron:nth-child(2) { animation-delay: 0.2s; }
     .open-book-indicator .chevron:nth-child(3) { animation-delay: 0s; }
     
     /* === ESTILOS DEL FONDO DINÁMICO === */
-    .stage-background {
-      position: fixed;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-      z-index: -1;
-      background-color: #1a1a1a;
-    }
-    .bg-layer {
-      position: absolute;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-      background-size: cover;
-      background-position: center;
-      transition: opacity 1s ease-in-out;
-    }
+    .stage-background { position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: -1; background-color: #1a1a1a; }
+    .bg-layer { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background-size: cover; background-position: center; transition: opacity 1s ease-in-out; }
 
     /* === ESTILOS DE LA PANTALLA DE CARGA === */
-    .loading-screen {
-      position: fixed;
-      top: 0;
-      left: 0;
-      width: 100vw;
-      height: 100vh;
-      background-color: #111;
-      display: flex;
-      flex-direction: column;
-      justify-content: center;
-      align-items: center;
-      z-index: 9999;
-      color: #e5e5e5;
-      transition: opacity 0.5s ease-out, visibility 0.5s ease-out;
-    }
-    .loading-screen.hidden {
-      opacity: 0;
-      visibility: hidden;
-    }
-    .loading-screen h1 {
-      font-size: 2rem;
-      font-weight: 300;
-      letter-spacing: 0.1em;
-      margin-bottom: 24px;
-    }
-    .progress-bar {
-      width: 300px;
-      height: 8px;
-      background-color: #333;
-      border-radius: 4px;
-      overflow: hidden;
-    }
-    .progress-bar-inner {
-      height: 100%;
-      background-color: #00cb69;
-      border-radius: 4px;
-      transition: width 0.3s ease;
-    }
+    .loading-screen { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background-color: #111; display: flex; flex-direction: column; justify-content: center; align-items: center; z-index: 9999; color: #e5e5e5; transition: opacity 0.5s ease-out, visibility 0.5s ease-out; }
+    .loading-screen.hidden { opacity: 0; visibility: hidden; }
+    .loading-screen h1 { font-size: 2rem; font-weight: 300; letter-spacing: 0.1em; margin-bottom: 24px; }
+    .progress-bar { width: 300px; height: 8px; background-color: #333; border-radius: 4px; overflow: hidden; }
+    .progress-bar-inner { height: 100%; background-color: #00cb69; border-radius: 4px; transition: width 0.3s ease; }
 
     /* === ESTILOS DE NAVEGACIÓN Y CONTROLES UI === */
-    .nav-bar {
-      position: fixed;
-      bottom: 0;
-      left: 0;
-      width: 100%;
-      background-color: rgba(0, 0, 0, 0);
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      padding: 8px 0;
-      gap: 8px;
-      z-index: 100;
-      flex-wrap: wrap;
-      transition: opacity 0.6s ease-in-out;
-    }
-    .btn { /* Estilo base de botón */
-      background: #1f1f1f00;
-      border: 1px solid #64646400;
-      color: #707070;
-      padding: 6px 10px;
-      border-radius: 9999px;
-      cursor: pointer;
-      transition: background-color 0.2s;
-    }
-    .btn:hover {
-      background: #2a2a2a00;
-    }
-    .nav-bar .btn { /* Anulación para botones de navegación */
-      background: transparent;
-      border: none;
-      padding: 6px 12px;
-      font-size: 14px;
-      opacity: 1;
-      transition: color 0.2s ease-in-out;
-    }
-    .nav-bar .btn:hover {
-      background: transparent;
-      color: #ffffff;
-    }
-    .music-control {
+    .nav-bar { position: fixed; bottom: 0; left: 0; width: 100%; background-color: rgba(0, 0, 0, 0); display: flex; justify-content: center; align-items: center; padding: 8px 0; gap: 8px; z-index: 100; flex-wrap: wrap; transition: opacity 0.6s ease-in-out; }
+    .btn { background: #1f1f1f00; border: 1px solid #64646400; color: #707070; padding: 6px 10px; border-radius: 9999px; cursor: pointer; transition: background-color 0.2s; }
+    .btn:hover { background: #2a2a2a00; }
+    .nav-bar .btn { background: transparent; border: none; padding: 6px 12px; font-size: 14px; opacity: 1; transition: color 0.2s ease-in-out; }
+    .nav-bar .btn:hover { background: transparent; color: #ffffff; }
+    
+    /* Contenedor para botones de UI (Mute, Fullscreen) */
+    .ui-controls {
       position: fixed;
       bottom: 60px; /* Posicionado sobre la barra de navegación */
       right: 16px;
       z-index: 101;
+      display: flex;
+      gap: 8px; /* Espacio entre botones */
     }
-    .music-control .btn {
+    .ui-controls .btn {
       width: 40px;
       height: 40px;
       padding: 0;
       display: grid;
       place-items: center;
       font-size: 18px;
+      border: 1px solid #333;
+      background: #1f1f1f;
+      color: #e5e5e5;
+    }
+    .ui-controls .btn:hover {
+      background: #2a2a2a;
     }
 
     /* === ESTILOS PARA LA PANTALLA DE AVISO MÓVIL === */
-    .mobile-warning-screen {
-      position: fixed;
-      top: 0;
-      left: 0;
-      width: 100vw;
-      height: 100vh;
-      background-color: #000;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      z-index: 10000;
-    }
-    .mobile-warning-screen img {
-      width: 100%;
-      height: 100%;
-      object-fit: contain;
-    }
+    .mobile-warning-screen { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background-color: #000; display: flex; justify-content: center; align-items: center; z-index: 10000; }
+    .mobile-warning-screen img { width: 100%; height: 100%; object-fit: contain; }
   </style>
 </head>
 <body>
