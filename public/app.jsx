@@ -401,7 +401,7 @@ function App() {
   const bookApiRef = useRef(null);
 
   const backgroundMap = {
-    0: `${ASSETS_PATH}bg1.jpg`, 5: `${ASSETS_PATH}bg5.webp`,
+    0: `${ASSETS_PATH}bg1.webp`, 5: `${ASSETS_PATH}bg5.webp`,
     10: `${ASSETS_PATH}bg10.webp`, 17: `${ASSETS_PATH}bgrocks.webp`,
     25: `${ASSETS_PATH}bgcity.webp`, 33: `${ASSETS_PATH}bgforest.webp`,
     39: `${ASSETS_PATH}bggreen.webp`, 43: `${ASSETS_PATH}bgred.webp`,
