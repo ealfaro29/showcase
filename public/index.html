@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Comic Book Viewer</title>
+  <title>Showcase 2025</title>
 
   <!-- StPageFlip (CDN) -->
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/page-flip@2.0.7/dist/css/page-flip.css">
@@ -124,9 +124,9 @@
     }
     .music-control {
         position: fixed;
-        bottom: 60px; /* Adjusted to sit above the nav bar */
+        bottom: 60px;
         right: 16px;
-        z-index: 101; /* Above nav bar */
+        z-index: 101;
     }
     .music-control .btn {
         width: 40px;
@@ -136,22 +136,45 @@
         place-items: center;
         font-size: 18px;
     }
-    
-    /* === ESTILOS PARA LA PANTALLA DE CARGA === */
+
+    /* === ESTILOS MEJORADOS PARA LA PANTALLA DE CARGA === */
     .loading-screen {
         position: fixed;
         top: 0;
         left: 0;
         width: 100vw;
         height: 100vh;
-        background-color: #000;
+        background-color: #111;
         display: flex;
+        flex-direction: column;
         justify-content: center;
         align-items: center;
         z-index: 9999;
-        color: #fff;
-        font-size: 24px;
-        font-family: monospace;
+        color: #e5e5e5;
+        transition: opacity 0.5s ease-out, visibility 0.5s ease-out;
+    }
+    .loading-screen.hidden {
+        opacity: 0;
+        visibility: hidden;
+    }
+    .loading-screen h1 {
+        font-size: 2.5rem;
+        font-weight: 300;
+        letter-spacing: 0.1em;
+        margin-bottom: 24px;
+    }
+    .progress-bar {
+        width: 300px;
+        height: 8px;
+        background-color: #333;
+        border-radius: 4px;
+        overflow: hidden;
+    }
+    .progress-bar-inner {
+        height: 100%;
+        background-color: #e5e5e5;
+        border-radius: 4px;
+        transition: width 0.3s ease;
     }
     
     /* === ESTILOS PARA LA BARRA DE NAVEGACIÓN === */
@@ -168,7 +191,7 @@
         padding: 8px 0;
         gap: 8px;
         z-index: 100;
-        flex-wrap: wrap; /* Adjusts for smaller screens */
+        flex-wrap: wrap;
     }
     .nav-bar .btn {
         background: #2f2f2f;

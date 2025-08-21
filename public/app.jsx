@@ -206,11 +206,14 @@ function AudioManager({ backgroundTrack, sfxMap, currentPage }) {
   );
 }
 
-/* ========= Pantalla de Carga ========= */
-function LoadingScreen() {
+/* ========= Pantalla de Carga (MEJORADA) ========= */
+function LoadingScreen({ progress, isHiding }) {
   return (
-    <div className="loading-screen">
-      Loading...
+    <div className={`loading-screen ${isHiding ? 'hidden' : ''}`}>
+      <h1>Showcase 2025</h1>
+      <div className="progress-bar">
+        <div className="progress-bar-inner" style={{ width: `${progress}%` }}></div>
+      </div>
     </div>
   );
 }
@@ -251,6 +254,7 @@ const FlipBook = forwardRef(({ pagePairsCount = 24, pathPrefix = 'assets/', onPa
   const pageFlipAudioRef = useRef(null);
   const coverAudioRef = useRef(null);
   useResizeTarget(stageRef);
+
   const pagesSrc = useMemo(() => {
     const sources = [];
     sources.push(`${pathPrefix}cover.webp`);
@@ -261,7 +265,7 @@ const FlipBook = forwardRef(({ pagePairsCount = 24, pathPrefix = 'assets/', onPa
     sources.push(`${pathPrefix}back.webp`);
     return sources;
   }, [pagePairsCount, pathPrefix]);
-
+  
   useImperativeHandle(ref, () => ({
     flipToPage(pageNumber) {
       if (pageFlipRef.current) {
@@ -292,11 +296,7 @@ const FlipBook = forwardRef(({ pagePairsCount = 24, pathPrefix = 'assets/', onPa
         pageDiv.appendChild(img);
         return pageDiv;
       });
-      pageFlipRef.current = new St.PageFlip(hostRef.current, {
-        width: w, height: h,
-        usePortrait: false, showCover: true, mobileScrollSupport: true,
-        flippingTime: 800, maxShadowOpacity: 0.7, useMouseEvents: true,
-      });
+      pageFlipRef.current = new St.PageFlip(hostRef.current, { width: w, height: h, usePortrait: false, showCover: true, mobileScrollSupport: true, flippingTime: 800, maxShadowOpacity: 0.7, useMouseEvents: true, });
       pageFlipRef.current.loadFromHTML(pageElements);
       pageFlipAudioRef.current = new Audio(`${pathPrefix}page-flip.mp3`);
       coverAudioRef.current = new Audio(`${pathPrefix}cover.mp3`);
@@ -306,20 +306,13 @@ const FlipBook = forwardRef(({ pagePairsCount = 24, pathPrefix = 'assets/', onPa
           const api = pageFlipRef.current;
           const cp = api.getCurrentPageIndex();
           if (cp <= 1 || cp >= api.getPageCount() - 2) {
-             const sound = coverAudioRef.current.cloneNode();
-             sound.volume = 0.5;
-             sound.play().catch(err => { if (err.name !== 'NotAllowedError') console.error("Audio play failed:", err); });
+             const sound = coverAudioRef.current.cloneNode(); sound.volume = 0.5; sound.play().catch(err => { if (err.name !== 'NotAllowedError') console.error("Audio play failed:", err); });
           } else {
-             const sound = pageFlipAudioRef.current.cloneNode();
-             sound.volume = 0.5;
-             sound.play().catch(err => { if (err.name !== 'NotAllowedError') console.error("Audio play failed:", err); });
+             const sound = pageFlipAudioRef.current.cloneNode(); sound.volume = 0.5; sound.play().catch(err => { if (err.name !== 'NotAllowedError') console.error("Audio play failed:", err); });
           }
         }
       });
-      pageFlipRef.current.on('flip', (e) => {
-        setIsFlipping(false);
-        onPageFlip(e.data);
-      });
+      pageFlipRef.current.on('flip', (e) => { setIsFlipping(false); onPageFlip(e.data); });
       hostRef.current.classList.add('frame');
       if (!cancelled) setReady(true);
     }
@@ -332,17 +325,11 @@ const FlipBook = forwardRef(({ pagePairsCount = 24, pathPrefix = 'assets/', onPa
       if (!stageRef.current || !pageFlipRef.current) return;
       const rect = stageRef.current.getBoundingClientRect();
       const { w, h } = computePageSize(rect.width, rect.height);
-      if (w && h) {
-        pageFlipRef.current.update({ width: w, height: h });
-        setBookSize({ w, h });
-      }
+      if (w && h) { pageFlipRef.current.update({ width: w, height: h }); setBookSize({ w, h }); }
     }
     window.addEventListener('resize', onResize);
     const id = requestAnimationFrame(onResize);
-    return () => {
-      cancelAnimationFrame(id);
-      window.removeEventListener('resize', onResize);
-    };
+    return () => { cancelAnimationFrame(id); window.removeEventListener('resize', onResize); };
   }, []);
 
   useEffect(() => {
@@ -367,11 +354,7 @@ const FlipBook = forwardRef(({ pagePairsCount = 24, pathPrefix = 'assets/', onPa
     if (!isBookPrepared && hostRef.current && pageFlipRef.current) {
       const bookElement = hostRef.current;
       const onSlideComplete = () => {
-        if (onComplete) {
-          onComplete();
-        } else {
-          pageFlipRef.current?.flipNext();
-        }
+        if (onComplete) { onComplete(); } else { pageFlipRef.current?.flipNext(); }
       };
       bookElement.addEventListener('transitionend', onSlideComplete, { once: true });
       setIsBookPrepared(true);
@@ -379,30 +362,16 @@ const FlipBook = forwardRef(({ pagePairsCount = 24, pathPrefix = 'assets/', onPa
     }
   };
   
-  const handleFlipNext = () => {
-    if (isFlipping || !pageFlipRef.current) return;
-    const totalPages = pageFlipRef.current.getPageCount();
-    if (currentPage === totalPages - 1) {
-      pageFlipRef.current.flip(0);
-    } else {
-      pageFlipRef.current.flipNext();
-    }
-  };
+  const handleFlipNext = () => { if (isFlipping || !pageFlipRef.current) return; const totalPages = pageFlipRef.current.getPageCount(); if (currentPage === totalPages - 1) { pageFlipRef.current.flip(0); } else { pageFlipRef.current.flipNext(); } };
   const handleFlipPrev = () => { if (!isFlipping) pageFlipRef.current?.flipPrev(); };
 
   useEffect(() => {
     function onKey(e) {
       if (e.key === 'ArrowRight') {
-        if (currentPage === 0 && !isBookPrepared) {
-            handlePrepareBook(e);
-        } else {
-            handleFlipNext();
-        }
-      } else if (e.key === 'ArrowLeft') {
-        handleFlipPrev();
+        if (currentPage === 0 && !isBookPrepared) { handlePrepareBook(e); } else { handleFlipNext(); }
+      } else if (e.key === 'ArrowLeft') { handleFlipPrev();
       } else if (e.key.toLowerCase?.() === 'f' && fsAvail) {
-        if (!document.fullscreenElement) enterFullscreen(document.documentElement);
-        else exitFullscreen();
+        if (!document.fullscreenElement) enterFullscreen(document.documentElement); else exitFullscreen();
       }
     }
     window.addEventListener('keydown', onKey);
@@ -427,27 +396,20 @@ function App() {
   const ASSETS_PATH = "assets/";
   const [currentPage, setCurrentPage] = useState(0);
   const [isLoading, setIsLoading] = useState(true);
+  const [loadingProgress, setLoadingProgress] = useState(0);
+  const [isHidingLoader, setIsHidingLoader] = useState(false);
   const bookApiRef = useRef(null);
 
   const backgroundMap = {
-    0: `${ASSETS_PATH}bg1.webp`, 5: `${ASSETS_PATH}bg5.webp`,
+    0: `${ASSETS_PATH}bg1.jpg`, 5: `${ASSETS_PATH}bg5.webp`,
     10: `${ASSETS_PATH}bg10.webp`, 17: `${ASSETS_PATH}bgrocks.webp`,
     25: `${ASSETS_PATH}bgcity.webp`, 33: `${ASSETS_PATH}bgforest.webp`,
     39: `${ASSETS_PATH}bggreen.webp`, 43: `${ASSETS_PATH}bgred.webp`,
     45: `${ASSETS_PATH}bggreen.webp`, 47: `${ASSETS_PATH}b1.webp`,
   };
   const defaultBackground = null;
-
   const backgroundTrack = `${ASSETS_PATH}background.mp3`;
-  
-  const sfxMap = {
-    0: null, 1: `${ASSETS_PATH}regular.mp3`,
-    5: `${ASSETS_PATH}crash.mp3`, 7: `${ASSETS_PATH}mkin.mp3`,
-    17: `${ASSETS_PATH}krag.mp3`, 27: `${ASSETS_PATH}robot.mp3`,
-    33: `${ASSETS_PATH}cry.mp3`, 39: `${ASSETS_PATH}boop.mp3`,
-    43: `${ASSETS_PATH}error.mp3`, 45: `${ASSETS_PATH}green.mp3`,
-    48: null,
-  };
+  const sfxMap = { 0: null, 1: `${ASSETS_PATH}regular.mp3`, 5: `${ASSETS_PATH}crash.mp3`, 7: `${ASSETS_PATH}mkin.mp3`, 17: `${ASSETS_PATH}krag.mp3`, 27: `${ASSETS_PATH}robot.mp3`, 33: `${ASSETS_PATH}cry.mp3`, 39: `${ASSETS_PATH}boop.mp3`, 43: `${ASSETS_PATH}error.mp3`, 45: `${ASSETS_PATH}green.mp3`, 48: null, };
 
   useEffect(() => {
     const preloadAssets = async () => {
@@ -460,27 +422,42 @@ function App() {
         imageSources.push(`${ASSETS_PATH}r${i}.webp`);
       }
       
-      const audioSources = [
-        ...Object.values(sfxMap).filter(Boolean),
-        backgroundTrack, `${ASSETS_PATH}page-flip.mp3`, `${ASSETS_PATH}cover.mp3`,
-      ];
+      const audioSources = [ ...Object.values(sfxMap).filter(Boolean), backgroundTrack, `${ASSETS_PATH}page-flip.mp3`, `${ASSETS_PATH}cover.mp3`, ];
+
+      const totalAssets = imageSources.length + audioSources.length;
+      let loadedAssets = 0;
+
+      const updateProgress = () => {
+        loadedAssets++;
+        setLoadingProgress((loadedAssets / totalAssets) * 100);
+      };
 
       const imagePromises = imageSources.map(src => new Promise((resolve) => {
           const img = new Image();
           img.src = src;
-          img.onload = resolve;
-          img.onerror = resolve; 
+          img.onload = () => { updateProgress(); resolve(); };
+          img.onerror = () => { updateProgress(); resolve(); };
       }));
 
       const audioPromises = audioSources.map(src => new Promise((resolve) => {
           const audio = new Audio();
           audio.src = src;
-          audio.addEventListener('canplaythrough', resolve, { once: true });
-          audio.addEventListener('error', resolve, { once: true });
+          const onCanPlay = () => {
+              updateProgress();
+              resolve();
+              audio.removeEventListener('canplaythrough', onCanPlay);
+              audio.removeEventListener('error', onCanPlay);
+          }
+          audio.addEventListener('canplaythrough', onCanPlay);
+          audio.addEventListener('error', onCanPlay);
       }));
 
       await Promise.all([...imagePromises, ...audioPromises]);
-      setIsLoading(false);
+      
+      setIsHidingLoader(true);
+      setTimeout(() => {
+          setIsLoading(false);
+      }, 500); // Must match CSS transition duration
     };
 
     preloadAssets();
@@ -490,12 +467,9 @@ function App() {
     bookApiRef.current?.flipToPage(pageNumber);
   };
 
-  if (isLoading) {
-    return <LoadingScreen />;
-  }
-
   return (
     <>
+      {isLoading && <LoadingScreen progress={loadingProgress} isHiding={isHidingLoader} />}
       <StageBackground
         backgroundMap={backgroundMap}
         defaultBackground={defaultBackground}
