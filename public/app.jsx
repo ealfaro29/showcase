@@ -85,7 +85,7 @@ function MobileWarningScreen({ imagePath }) {
 function LoadingScreen({ progress, isHiding }) {
   return (
     <div className={`loading-screen ${isHiding ? 'hidden' : ''}`}>
-      <h1>Broken Orbit -</h1> <h2> Showcase 2025</h2>
+      <h1>Broken Orbit - Showcase 2025</h1>
       <div className="progress-bar">
         <div className="progress-bar-inner" style={{ width: `${progress}%` }}></div>
       </div>
