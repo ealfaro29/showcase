@@ -2,6 +2,22 @@ const { useEffect, useMemo, useRef, useState, forwardRef, useImperativeHandle } 
 
 /* ========= Utilidades ========= */
 
+// Hook personalizado para detectar pantallas de tamaño móvil
+function useIsMobile(breakpoint = 768) {
+  const [isMobile, setIsMobile] = useState(window.innerWidth < breakpoint);
+
+  useEffect(() => {
+    const handleResize = () => {
+      setIsMobile(window.innerWidth < breakpoint);
+    };
+
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, [breakpoint]);
+
+  return isMobile;
+}
+
 function canFullscreen() {
   return !!(document.fullscreenEnabled || document.webkitFullscreenEnabled || document.msFullscreenEnabled);
 }
@@ -12,11 +28,11 @@ function computePageSize(containerW, containerH) {
   if (!containerW || !containerH) return { w: 0, h: 0 };
 
   if (containerW / containerH > bookRatio) {
-    const h = Math.floor(containerH * 0.85);
+    const h = Math.floor(containerH * 0.80);
     const w = Math.floor(h * pageRatio);
     return { w, h };
   } else {
-    const w_total = Math.floor(containerW * 0.85);
+    const w_total = Math.floor(containerW * 0.80);
     const w = Math.floor(w_total / 2);
     const h = Math.floor(w / pageRatio);
     return { w, h };
@@ -54,8 +70,30 @@ async function exitFullscreen() {
 }
 
 
-/* ========= GESTOR DE FONDOS ========= */
+/* ========= Componentes de UI ========= */
 
+// Componente para la pantalla de aviso en móviles
+function MobileWarningScreen({ imagePath }) {
+  return (
+    <div className="mobile-warning-screen">
+      <img src={imagePath} alt="Esta aplicación está diseñada para computadoras de escritorio." />
+    </div>
+  );
+}
+
+// Componente para la pantalla de carga
+function LoadingScreen({ progress, isHiding }) {
+  return (
+    <div className={`loading-screen ${isHiding ? 'hidden' : ''}`}>
+      <h1>Showcase 2025</h1>
+      <div className="progress-bar">
+        <div className="progress-bar-inner" style={{ width: `${progress}%` }}></div>
+      </div>
+    </div>
+  );
+}
+
+// Componente para el fondo dinámico
 function StageBackground({ backgroundMap, defaultBackground, currentPage }) {
   const [layers, setLayers] = useState([
     { url: defaultBackground, visible: true },
@@ -102,9 +140,7 @@ function StageBackground({ backgroundMap, defaultBackground, currentPage }) {
   );
 }
 
-
-/* ========= GESTOR DE AUDIO ========= */
-
+// Componente para gestionar el audio
 function AudioManager({ backgroundTrack, sfxMap, currentPage }) {
   const bgmAudioRef = useRef(null);
   const sfxAudioRef = useRef(null);
@@ -158,7 +194,6 @@ function AudioManager({ backgroundTrack, sfxMap, currentPage }) {
 
   useEffect(() => {
     if (!hasInteracted || isMuted) return;
-
     let targetSfxUrl = null;
     for (let i = currentPage; i >= 0; i--) {
       if (sfxMap.hasOwnProperty(i)) {
@@ -166,9 +201,7 @@ function AudioManager({ backgroundTrack, sfxMap, currentPage }) {
         break;
       }
     }
-
     if (targetSfxUrl === currentSfxUrl.current) return;
-
     const sfxPlayer = sfxAudioRef.current;
     const playNewTrack = () => {
       currentSfxUrl.current = targetSfxUrl;
@@ -179,7 +212,6 @@ function AudioManager({ backgroundTrack, sfxMap, currentPage }) {
         fadeAudio(sfxPlayer, 0.6, 1000);
       }
     };
-
     if (currentSfxUrl.current) {
       fadeAudio(sfxPlayer, 0, 1000, () => {
         sfxPlayer.pause();
@@ -215,29 +247,12 @@ function AudioManager({ backgroundTrack, sfxMap, currentPage }) {
   );
 }
 
-
-/* ========= PANTALLA DE CARGA ========= */
-
-function LoadingScreen({ progress, isHiding }) {
-  return (
-    <div className={`loading-screen ${isHiding ? 'hidden' : ''}`}>
-      <h1>Broken Orbit - Showcase 2025</h1>
-      <div className="progress-bar">
-        <div className="progress-bar-inner" style={{ width: `${progress}%` }}></div>
-      </div>
-    </div>
-  );
-}
-
-
-/* ========= BARRA DE NAVEGACIÓN ========= */
-
+// Componente individual de botón para la barra de navegación (con efecto fade-in)
 function NavButton({ label, page, onNavigate }) {
   const [isVisible, setIsVisible] = useState(false);
 
   useEffect(() => {
-    // This effect runs only once when the button mounts, triggering the fade-in.
-    const timer = setTimeout(() => setIsVisible(true), 100); // Small delay to ensure transition triggers
+    const timer = setTimeout(() => setIsVisible(true), 100);
     return () => clearTimeout(timer);
   }, []);
 
@@ -255,6 +270,7 @@ function NavButton({ label, page, onNavigate }) {
   );
 }
 
+// Componente de la barra de navegación progresiva
 function NavBar({ onNavigate, maxPageVisited }) {
   const navLinks = [
     { label: 'Cover', page: 0 },
@@ -284,14 +300,12 @@ function NavBar({ onNavigate, maxPageVisited }) {
   );
 }
 
-
-/* ========= FLIPBOOK ========= */
-
+// Componente principal del libro interactivo
 const FlipBook = forwardRef(({ pagePairsCount = 25, pathPrefix = 'assets/', onPageFlip = () => {}, currentPage = 0 }, ref) => {
   const stageRef = useRef(null);
   const hostRef = useRef(null);
   const pageFlipRef = useRef(null);
-  const [fsAvail] = useState(canFullscreen());
+  const [fsAvail, setFsAvail] = useState(canFullscreen());
   const [ready, setReady] = useState(false);
   const [isFlipping, setIsFlipping] = useState(false);
   const [bookSize, setBookSize] = useState({ w: 0, h: 0 });
@@ -392,9 +406,8 @@ const FlipBook = forwardRef(({ pagePairsCount = 25, pathPrefix = 'assets/', onPa
 
   useEffect(() => {
     if (!hostRef.current || !pageFlipRef.current || !bookSize.w) return;
-    const totalPages = pageFlipRef.current.getPageCount();
     const isClosedAtStart = currentPage === 0;
-    const isClosedAtEnd = currentPage === totalPages - 1;
+    const isClosedAtEnd = currentPage === pageFlipRef.current.getPageCount() - 1;
     const bookElement = hostRef.current;
     if (isClosedAtStart) {
       setIsBookPrepared(false);
@@ -485,6 +498,14 @@ const FlipBook = forwardRef(({ pagePairsCount = 25, pathPrefix = 'assets/', onPa
 function App() {
   const PAGE_PAIRS = 25;
   const ASSETS_PATH = "assets/";
+  const isMobile = useIsMobile();
+
+  // Si es móvil, renderiza la advertencia y detiene la ejecución.
+  if (isMobile) {
+    return <MobileWarningScreen imagePath={`${ASSETS_PATH}mobile.webp`} />;
+  }
+
+  // ---- Todo el código a continuación solo se ejecutará en escritorio ----
   const [currentPage, setCurrentPage] = useState(0);
   const [isLoading, setIsLoading] = useState(true);
   const [loadingProgress, setLoadingProgress] = useState(0);
@@ -498,7 +519,7 @@ function App() {
     }
   }, [currentPage, maxPageVisited]);
 
-  const backgroundMap = { 0: `${ASSETS_PATH}bg1.webp`, 5: `${ASSETS_PATH}bg5.webp`, 10: `${ASSETS_PATH}bg10.webp`, 17: `${ASSETS_PATH}bgrocks.webp`, 25: `${ASSETS_PATH}bgcity.webp`, 33: `${ASSETS_PATH}bgforest.webp`, 39: `${ASSETS_PATH}bggreen.webp`, 43: `${ASSETS_PATH}bgred.webp`, 45: `${ASSETS_PATH}bggreen.webp`, 50: `${ASSETS_PATH}bg1.webp` };
+  const backgroundMap = { 0: `${ASSETS_PATH}bg1.webp`, 5: `${ASSETS_PATH}bg5.webp`, 10: `${ASSETS_PATH}bg10.webp`, 17: `${ASSETS_PATH}bgrocks.webp`, 25: `${ASSETS_PATH}bgcity.webp`, 33: `${ASSETS_PATH}bgforest.webp`, 39: `${ASSETS_PATH}bggreen.webp`, 43: `${ASSETS_PATH}bgred.webp`, 45: `${ASSETS_PATH}bggreen.webp`, 47: `${ASSETS_PATH}b1.webp` };
   const defaultBackground = null;
   const backgroundTrack = `${ASSETS_PATH}background.mp3`;
   const sfxMap = { 0: null, 1: `${ASSETS_PATH}regular.mp3`, 5: `${ASSETS_PATH}crash.mp3`, 7: `${ASSETS_PATH}mkin.mp3`, 17: `${ASSETS_PATH}krag.mp3`, 27: `${ASSETS_PATH}robot.mp3`, 33: `${ASSETS_PATH}cry.mp3`, 39: `${ASSETS_PATH}boop.mp3`, 43: `${ASSETS_PATH}error.mp3`, 45: `${ASSETS_PATH}green.mp3`, 48: null };
@@ -506,46 +527,45 @@ function App() {
   useEffect(() => {
     const preloadAssets = async () => {
       const imageSources = [ ...Object.values(backgroundMap).filter(Boolean), `${ASSETS_PATH}cover.webp`, `${ASSETS_PATH}back.webp` ];
-      for (let i = 1; i <= PAGE_PAIRS; i++) {
-        imageSources.push(`${ASSETS_PATH}l${i}.webp`);
-        imageSources.push(`${ASSETS_PATH}r${i}.webp`);
-      }
-
+      for (let i = 1; i <= PAGE_PAIRS; i++) { imageSources.push(`${ASSETS_PATH}l${i}.webp`); imageSources.push(`${ASSETS_PATH}r${i}.webp`); }
       const audioSources = [ ...Object.values(sfxMap).filter(Boolean), backgroundTrack, `${ASSETS_PATH}page-flip.mp3`, `${ASSETS_PATH}cover.mp3` ];
       const totalAssets = imageSources.length + audioSources.length;
       let loadedAssets = 0;
+      const updateProgress = () => { loadedAssets++; setLoadingProgress((loadedAssets / totalAssets) * 100); };
+      
+      const imagePromises = imageSources.map(src => {
+        return new Promise((resolve) => {
+          const img = new Image();
+          img.src = src;
+          img.onload = () => { updateProgress(); resolve(); };
+          img.onerror = () => { updateProgress(); resolve(); };
+        });
+      });
 
-      const updateProgress = () => {
-        loadedAssets++;
-        setLoadingProgress((loadedAssets / totalAssets) * 100);
-      };
+      // ESTA ES LA SECCIÓN CORREGIDA Y FORMATEADA
+      const audioPromises = audioSources.map(src => {
+        return new Promise((resolve) => {
+          const audio = new Audio();
+          audio.src = src;
+          
+          const onAudioReady = () => {
+            updateProgress();
+            resolve();
+            audio.removeEventListener('canplaythrough', onAudioReady);
+            audio.removeEventListener('error', onAudioReady);
+          };
 
-      const imagePromises = imageSources.map(src => new Promise((resolve) => {
-        const img = new Image();
-        img.src = src;
-        img.onload = () => { updateProgress(); resolve(); };
-        img.onerror = () => { updateProgress(); resolve(); };
-      }));
-
-      const audioPromises = audioSources.map(src => new Promise((resolve) => {
-        const audio = new Audio();
-        audio.src = src;
-        const onCanPlay = () => {
-          updateProgress();
-          resolve();
-          audio.removeEventListener('canplaythrough', onCanPlay);
-          audio.removeEventListener('error', onCanPlay);
-        }
-        audio.addEventListener('canplaythrough', onCanPlay);
-        audio.addEventListener('error', onCanPlay);
-      }));
+          audio.addEventListener('canplaythrough', onAudioReady);
+          audio.addEventListener('error', onAudioReady);
+        });
+      });
 
       await Promise.all([...imagePromises, ...audioPromises]);
 
       setIsHidingLoader(true);
       setTimeout(() => {
         setIsLoading(false);
-      }, 500); // Must match CSS transition duration
+      }, 500);
     };
 
     preloadAssets();
@@ -558,28 +578,10 @@ function App() {
   return (
     <>
       {isLoading && <LoadingScreen progress={loadingProgress} isHiding={isHidingLoader} />}
-
-      <StageBackground
-        backgroundMap={backgroundMap}
-        defaultBackground={defaultBackground}
-        currentPage={currentPage}
-      />
-      <FlipBook
-        ref={bookApiRef}
-        pagePairsCount={PAGE_PAIRS}
-        pathPrefix={ASSETS_PATH}
-        onPageFlip={setCurrentPage}
-        currentPage={currentPage}
-      />
-      <AudioManager
-        backgroundTrack={backgroundTrack}
-        sfxMap={sfxMap}
-        currentPage={currentPage}
-      />
-      <NavBar
-        onNavigate={handleNavigate}
-        maxPageVisited={maxPageVisited}
-      />
+      <StageBackground backgroundMap={backgroundMap} defaultBackground={defaultBackground} currentPage={currentPage} />
+      <FlipBook ref={bookApiRef} pagePairsCount={PAGE_PAIRS} pathPrefix={ASSETS_PATH} onPageFlip={setCurrentPage} currentPage={currentPage} />
+      <AudioManager backgroundTrack={backgroundTrack} sfxMap={sfxMap} currentPage={currentPage} />
+      <NavBar onNavigate={handleNavigate} maxPageVisited={maxPageVisited} />
     </>
   );
 }

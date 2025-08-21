@@ -15,7 +15,7 @@
   <script src="https://cdn.jsdelivr.net/npm/@babel/standalone@7.24.7/babel.min.js"></script>
 
   <style>
-    /* === BASE & LAYOUT STYLES === */
+    /* === ESTILOS BASE Y DE LAYOUT === */
     :root {
       color-scheme: dark;
     }
@@ -42,7 +42,7 @@
       background: transparent;
     }
 
-    /* === BOOK & PAGE STYLES === */
+    /* === ESTILOS DEL LIBRO Y PÁGINAS === */
     .book-wrapper {
       position: relative;
     }
@@ -97,7 +97,7 @@
       cursor: pointer;
     }
     
-    /* === AESTHETIC CLICK INDICATOR STYLES === */
+    /* === ESTILOS DEL INDICADOR DE CLICK ESTÉTICO === */
     @keyframes pulseGlow {
       0%, 100% {
         transform: scale(1) translateY(-50%);
@@ -123,7 +123,7 @@
     }
     .open-book-indicator {
       position: absolute;
-      left: calc(50% + 220px);
+      left: calc(50% + 20px);
       top: 50%;
       transform: translateY(-50%);
       width: 60px;
@@ -148,7 +148,7 @@
     .open-book-indicator .chevron:nth-child(2) { animation-delay: 0.2s; }
     .open-book-indicator .chevron:nth-child(3) { animation-delay: 0s; }
     
-    /* === DYNAMIC BACKGROUND STYLES === */
+    /* === ESTILOS DEL FONDO DINÁMICO === */
     .stage-background {
       position: fixed;
       top: 0;
@@ -169,7 +169,7 @@
       transition: opacity 1.2s ease-in-out;
     }
 
-    /* === LOADING SCREEN STYLES === */
+    /* === ESTILOS DE LA PANTALLA DE CARGA === */
     .loading-screen {
       position: fixed;
       top: 0;
@@ -190,8 +190,8 @@
       visibility: hidden;
     }
     .loading-screen h1 {
-      font-size: 2rem;
-      font-weight: 500;
+      font-size: 2.5rem;
+      font-weight: 300;
       letter-spacing: 0.1em;
       margin-bottom: 24px;
     }
@@ -204,18 +204,19 @@
     }
     .progress-bar-inner {
       height: 100%;
-      background-color: #00a380;
+      background-color: #e5e5e5;
       border-radius: 4px;
       transition: width 0.3s ease;
     }
 
-    /* === NAVIGATION & UI CONTROL STYLES === */
+    /* === ESTILOS DE NAVEGACIÓN Y CONTROLES UI === */
     .nav-bar {
       position: fixed;
       bottom: 0;
       left: 0;
       width: 100%;
-      background-color: rgba(0, 0, 0, 0);
+      background-color: rgba(0, 0, 0, 0.5);
+      backdrop-filter: blur(5px);
       display: flex;
       justify-content: center;
       align-items: center;
@@ -225,10 +226,10 @@
       flex-wrap: wrap;
       transition: opacity 0.3s ease-in-out;
     }
-    .btn { /* Base button style */
+    .btn { /* Estilo base de botón */
       background: #1f1f1f;
-      border: 1px solid #33333300;
-      color: #c9c9c9;
+      border: 1px solid #333;
+      color: #e5e5e5;
       padding: 6px 10px;
       border-radius: 9999px;
       cursor: pointer;
@@ -237,13 +238,13 @@
     .btn:hover {
       background: #2a2a2a;
     }
-    .nav-bar .btn { /* Navigation-specific override */
+    .nav-bar .btn { /* Anulación para botones de navegación */
       background: transparent;
       border: none;
       padding: 6px 12px;
       font-size: 14px;
       opacity: 1;
-      transition: color 0.5s ease-in-out;
+      transition: color 0.2s ease-in-out;
     }
     .nav-bar .btn:hover {
       background: transparent;
@@ -251,7 +252,7 @@
     }
     .music-control {
       position: fixed;
-      bottom: 60px; /* Positioned above the nav bar */
+      bottom: 60px; /* Posicionado sobre la barra de navegación */
       right: 16px;
       z-index: 101;
     }
@@ -262,6 +263,25 @@
       display: grid;
       place-items: center;
       font-size: 18px;
+    }
+
+    /* === ESTILOS PARA LA PANTALLA DE AVISO MÓVIL === */
+    .mobile-warning-screen {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      background-color: #000;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      z-index: 10000;
+    }
+    .mobile-warning-screen img {
+      width: 100%;
+      height: 100%;
+      object-fit: contain;
     }
   </style>
 </head>
