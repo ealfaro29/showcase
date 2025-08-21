@@ -257,13 +257,13 @@ function NavButton({ label, page, onNavigate }) {
 
 function NavBar({ onNavigate, maxPageVisited }) {
   const navLinks = [
-    { label: 'Cover', page: 0 },
-    { label: 'E', page: 3 },
-    { label: 'Mkins', page: 9 },
-    { label: 'Krag', page: 17 },
-    { label: 'Seven', page: 25 },
-    { label: 'Sylas', page: 33 },
-    { label: 'Green City', page: 39 },
+    { label: 'Cover', page: 1 },
+    { label: 'E', page: 5 },
+    { label: 'Mkins', page: 11 },
+    { label: 'Krag', page: 19 },
+    { label: 'Seven', page: 27 },
+    { label: 'Sylas', page: 35 },
+    { label: 'Green City', page: 41 },
   ];
 
   const isBarVisible = maxPageVisited > 0;
