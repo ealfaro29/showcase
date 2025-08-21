@@ -28,11 +28,11 @@ function computePageSize(containerW, containerH) {
   if (!containerW || !containerH) return { w: 0, h: 0 };
 
   if (containerW / containerH > bookRatio) {
-    const h = Math.floor(containerH * 0.80);
+    const h = Math.floor(containerH * 0.85);
     const w = Math.floor(h * pageRatio);
     return { w, h };
   } else {
-    const w_total = Math.floor(containerW * 0.80);
+    const w_total = Math.floor(containerW * 0.85);
     const w = Math.floor(w_total / 2);
     const h = Math.floor(w / pageRatio);
     return { w, h };
@@ -85,7 +85,7 @@ function MobileWarningScreen({ imagePath }) {
 function LoadingScreen({ progress, isHiding }) {
   return (
     <div className={`loading-screen ${isHiding ? 'hidden' : ''}`}>
-      <h1>Showcase 2025</h1>
+      <h1>Broken Orbit -</h1> <h2> Showcase 2025</h2>
       <div className="progress-bar">
         <div className="progress-bar-inner" style={{ width: `${progress}%` }}></div>
       </div>
@@ -209,7 +209,7 @@ function AudioManager({ backgroundTrack, sfxMap, currentPage }) {
         sfxPlayer.src = targetSfxUrl;
         sfxPlayer.loop = true;
         sfxPlayer.play().catch(err => console.error("SFX play failed:", err));
-        fadeAudio(sfxPlayer, 0.6, 1000);
+        fadeAudio(sfxPlayer, 0.5, 1000);
       }
     };
     if (currentSfxUrl.current) {

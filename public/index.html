@@ -123,14 +123,14 @@
     }
     .open-book-indicator {
       position: absolute;
-      left: calc(50% + 20px);
+      left: calc(50% + 250px);
       top: 50%;
       transform: translateY(-50%);
       width: 60px;
       height: 60px;
-      background: rgba(255, 255, 255, 0.05);
+      background: rgba(255, 255, 255, 0);
       border-radius: 50%;
-      box-shadow: 0 0 15px rgba(255, 255, 255, 0.2);
+      box-shadow: 0 0 15px rgba(255, 255, 255, 0);
       display: flex;
       justify-content: center;
       align-items: center;
@@ -140,7 +140,7 @@
     }
     .open-book-indicator .chevron {
       font-size: 24px;
-      color: #fff;
+      color: #00ce8d;
       opacity: 0;
       animation: slideLeft 1.5s ease-in-out infinite;
     }
@@ -166,7 +166,7 @@
       height: 100%;
       background-size: cover;
       background-position: center;
-      transition: opacity 1.2s ease-in-out;
+      transition: opacity 1s ease-in-out;
     }
 
     /* === ESTILOS DE LA PANTALLA DE CARGA === */
@@ -190,7 +190,7 @@
       visibility: hidden;
     }
     .loading-screen h1 {
-      font-size: 2.5rem;
+      font-size: 2rem;
       font-weight: 300;
       letter-spacing: 0.1em;
       margin-bottom: 24px;
@@ -204,7 +204,7 @@
     }
     .progress-bar-inner {
       height: 100%;
-      background-color: #e5e5e5;
+      background-color: #00cb69;
       border-radius: 4px;
       transition: width 0.3s ease;
     }
@@ -215,8 +215,7 @@
       bottom: 0;
       left: 0;
       width: 100%;
-      background-color: rgba(0, 0, 0, 0.5);
-      backdrop-filter: blur(5px);
+      background-color: rgba(0, 0, 0, 0);
       display: flex;
       justify-content: center;
       align-items: center;
@@ -224,11 +223,11 @@
       gap: 8px;
       z-index: 100;
       flex-wrap: wrap;
-      transition: opacity 0.3s ease-in-out;
+      transition: opacity 0.6s ease-in-out;
     }
     .btn { /* Estilo base de botón */
-      background: #1f1f1f;
-      border: 1px solid #333;
+      background: #1f1f1f00;
+      border: 1px solid #64646400;
       color: #e5e5e5;
       padding: 6px 10px;
       border-radius: 9999px;
@@ -236,7 +235,7 @@
       transition: background-color 0.2s;
     }
     .btn:hover {
-      background: #2a2a2a;
+      background: #2a2a2a00;
     }
     .nav-bar .btn { /* Anulación para botones de navegación */
       background: transparent;
@@ -248,7 +247,7 @@
     }
     .nav-bar .btn:hover {
       background: transparent;
-      color: #fff;
+      color: #ffffff;
     }
     .music-control {
       position: fixed;
