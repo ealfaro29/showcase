@@ -55,7 +55,7 @@ const AudioManager = forwardRef(({ backgroundTrack, sfxMap, currentPage, isMuted
 
   // Función para reproducir sonidos de un solo uso (como pasar página)
   useImperativeHandle(ref, () => ({
-    playOneShotSfx(url, volume = 0.5) {
+    playOneShotSfx(url, volume = 0.4) {
       if (isMuted || !hasInteracted) return;
       const audio = new Audio(url);
       audio.volume = volume;
@@ -73,7 +73,7 @@ const AudioManager = forwardRef(({ backgroundTrack, sfxMap, currentPage, isMuted
           bgmAudioRef.current.volume = 0;
           await bgmAudioRef.current.play();
           if (!isMuted) {
-            fadeAudio(bgmAudioRef.current, 0.2, 3000); // Fade-in inicial
+            fadeAudio(bgmAudioRef.current, 0.4, 250); // Fade-in inicial
           }
         } catch (error) { console.warn("La reproducción automática de BGM fue bloqueada."); }
       }
