@@ -61,29 +61,33 @@
     .nav-bar .btn { background: transparent; border: none; padding: 6px 12px; font-size: 14px; opacity: 1; transition: color 0.2s ease-in-out; }
     .nav-bar .btn:hover { background: transparent; color: #ffffff; }
     
-    /* Contenedor para botones de UI (Mute, Fullscreen) */
-    .ui-controls {
-      position: fixed;
-      bottom: 60px; /* Posicionado sobre la barra de navegación */
-      right: 16px;
-      z-index: 101;
-      display: flex;
-      gap: 8px; /* Espacio entre botones */
-    }
-    .ui-controls .btn {
-      width: 40px;
-      height: 40px;
-      padding: 0;
-      display: grid;
-      place-items: center;
-      font-size: 18px;
-      border: 1px solid #333;
-      background: #1f1f1f;
-      color: #e5e5e5;
-    }
-    .ui-controls .btn:hover {
-      background: #2a2a2a;
-    }
+   /* Contenedor para botones de UI (Mute, Fullscreen) */
+.ui-controls {
+  position: fixed;
+  bottom: 60px;
+  right: 16px;
+  z-index: 101;
+  display: flex;
+  gap: 8px;
+}
+.ui-controls .btn {
+  /* --- Cambios --- */
+  /* Se eliminan width, height y el padding: 0 */
+  padding: 6px 14px;      /* Se añade padding para el texto */
+  font-size: 14px;        /* Se ajusta el tamaño de la fuente */
+  border-radius: 9999px;  /* Se asegura la forma de píldora */
+  /* --- Fin de Cambios --- */
+  
+  /* Se mantienen los estilos visuales */
+  display: grid;
+  place-items: center;
+  border: 1px solid #333;
+  background: #1f1f1f;
+  color: #e5e5e5;
+}
+.ui-controls .btn:hover {
+  background: #2a2a2a;
+}
 
     /* === ESTILOS PARA LA PANTALLA DE AVISO MÓVIL === */
     .mobile-warning-screen { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background-color: #000; display: flex; justify-content: center; align-items: center; z-index: 10000; }

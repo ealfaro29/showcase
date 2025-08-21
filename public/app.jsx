@@ -129,21 +129,25 @@ const AudioManager = forwardRef(({ backgroundTrack, sfxMap, currentPage, isMuted
     return () => document.removeEventListener('fullscreenchange', onFsChange);
   }, []);
 
-  return (
+   return (
     <>
       <audio ref={bgmAudioRef} src={backgroundTrack} loop preload="auto" />
       <audio ref={sfxAudioRefs.current[0]} preload="auto" />
       <audio ref={sfxAudioRefs.current[1]} preload="auto" />
-      {hasInteracted && (
-        <div className="ui-controls">
-          <button className="btn" onClick={toggleMute} title={isMuted ? "Activar sonido" : "Silenciar sonido"}>
-            {isMuted ? '🔇' : '🔊'}
-          </button>
-          <button className="btn" onClick={toggleFullscreen} title="Pantalla completa">
-            {isFullscreen ? '↙️' : '↗️'}
-          </button>
-        </div>
-      )}
+      
+      {/* --- CAMBIOS --- */}
+      {/* 1. Se elimina la condición hasInteracted para que los botones sean siempre visibles. */}
+      <div className="ui-controls">
+        <button className="btn" onClick={toggleMute} title={isMuted ? "Activar sonido" : "Silenciar sonido"}>
+          {/* 2. Se reemplazan los iconos por texto dinámico. */}
+          {isMuted ? 'Unmute' : 'Mute'}
+        </button>
+        <button className="btn" onClick={toggleFullscreen} title="Pantalla completa">
+          {/* 3. Se reemplazan los iconos por texto dinámico. */}
+          {isFullscreen ? 'Exit Fullscreen' : 'Fullscreen'}
+        </button>
+      </div>
+      {/* --- FIN DE CAMBIOS --- */}
     </>
   );
 });
