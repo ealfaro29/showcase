@@ -65,6 +65,61 @@
         z-index: 100;
         cursor: pointer;
     }
+
+    /* === ESTILOS PARA EL NUEVO INDICADOR ESTÉTICO === */
+    @keyframes pulseGlow {
+      0%, 100% {
+        transform: scale(1);
+        opacity: 0.7;
+      }
+      50% {
+        transform: scale(1.1);
+        opacity: 1;
+      }
+    }
+    @keyframes slideRight {
+      0% {
+        transform: translateX(-8px);
+        opacity: 0;
+      }
+      50% {
+        opacity: 1;
+      }
+      100% {
+        transform: translateX(8px);
+        opacity: 0;
+      }
+    }
+
+    .open-book-indicator {
+      position: absolute;
+      left: 50%;
+      top: 50%;
+      transform: translate(-50%, -50%);
+      width: 60px;
+      height: 60px;
+      background: rgba(255, 255, 255, 0.05);
+      border-radius: 50%;
+      box-shadow: 0 0 15px rgba(255, 255, 255, 0.2);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      pointer-events: none;
+      z-index: 101; /* Above interceptor visually, but doesn't block clicks */
+      animation: pulseGlow 2.5s ease-in-out infinite;
+    }
+    .open-book-indicator .chevron {
+      font-size: 24px;
+      color: #fff;
+      opacity: 0;
+      animation: slideRight 1.5s ease-in-out infinite;
+    }
+    .open-book-indicator .chevron:nth-child(1) { animation-delay: 0s; }
+    .open-book-indicator .chevron:nth-child(2) { animation-delay: 0.2s; }
+    .open-book-indicator .chevron:nth-child(3) { animation-delay: 0.4s; }
+
+
+    /* ... (rest of the styles are the same) ... */
     .stage-background {
       position: fixed;
       top: 0;
@@ -136,8 +191,6 @@
         place-items: center;
         font-size: 18px;
     }
-
-    /* === ESTILOS MEJORADOS PARA LA PANTALLA DE CARGA === */
     .loading-screen {
         position: fixed;
         top: 0;
@@ -176,8 +229,6 @@
         border-radius: 4px;
         transition: width 0.3s ease;
     }
-    
-    /* === ESTILOS PARA LA BARRA DE NAVEGACIÓN === */
     .nav-bar {
         position: fixed;
         bottom: 0;
@@ -192,6 +243,7 @@
         gap: 8px;
         z-index: 100;
         flex-wrap: wrap;
+        transition: opacity 0.3s ease-in-out;
     }
     .nav-bar .btn {
         background: #2f2f2f00;

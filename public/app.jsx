@@ -230,7 +230,6 @@ function NavBar({ onNavigate, maxPageVisited }) {
     { label: 'Green City', page: 39 },
   ];
 
-  // Only show the nav bar if the user has reached at least the first section after the cover
   const isVisible = maxPageVisited >= navLinks[1].page;
   const unlockedLinks = navLinks.filter(link => link.page <= maxPageVisited);
   
@@ -245,7 +244,7 @@ function NavBar({ onNavigate, maxPageVisited }) {
   );
 }
 
-/* ========= FLIPBOOK (CON MARCADOR) ========= */
+/* ========= FLIPBOOK (CON NUEVO INDICADOR ESTETICO) ========= */
 const FlipBook = forwardRef(({ pagePairsCount = 24, pathPrefix = 'assets/', onPageFlip = () => {}, currentPage = 0 }, ref) => {
   const stageRef = useRef(null);
   const hostRef = useRef(null);
@@ -388,7 +387,13 @@ const FlipBook = forwardRef(({ pagePairsCount = 24, pathPrefix = 'assets/', onPa
     <main ref={stageRef} className="stage">
         <div className="book-wrapper">
           {showInterceptor && <div className="click-interceptor" onClick={handlePrepareBook} />}
-          {showInterceptor && <div className="click-marker">&lt; Click</div>}
+          {showInterceptor && (
+            <div className="open-book-indicator">
+              <span className="chevron">&raquo;</span>
+              <span className="chevron">&raquo;</span>
+              <span className="chevron">&raquo;</span>
+            </div>
+          )}
           <div id="book" ref={hostRef}></div>
         </div>
     </main>
@@ -406,12 +411,11 @@ function App() {
   const bookApiRef = useRef(null);
   const [maxPageVisited, setMaxPageVisited] = useState(0);
 
-  // Update maxPageVisited whenever the currentPage changes
   useEffect(() => {
     if (currentPage > maxPageVisited) {
       setMaxPageVisited(currentPage);
     }
-  }, [currentPage]);
+  }, [currentPage, maxPageVisited]);
 
   const backgroundMap = {
     0: `${ASSETS_PATH}bg1.webp`, 5: `${ASSETS_PATH}bg5.webp`,
