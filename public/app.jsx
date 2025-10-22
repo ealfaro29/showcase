@@ -1,6 +1,6 @@
 // Accedemos a las variables globales de los scripts CDN
 const { useEffect, useMemo, useRef, useState, forwardRef, useImperativeHandle } = React;
-// Esta línea ahora funciona porque ReactRouterDOM está cargado desde index.html
+// Esta línea ahora funcionará porque ReactRouterDOM está cargado desde index.html
 const { BrowserRouter, Routes, Route, Link } = ReactRouterDOM;
 
 /* =================================================== */
@@ -56,16 +56,13 @@ function LandingPage() {
       <main>
         <h2 style={styles.h2}>Proyectos</h2>
         <ul style={styles.ul}>
-          <li style={styles.li}>
-            {/* Link de React Router que lleva a tu cómic */}
-            <Link to="/showcase" style={styles.link}>
+          {/* Link de React Router que lleva a tu cómic */}
+          <Link to="/showcase" style={styles.link}>
               Broken Orbit - Showcase 2025
               <span style={styles.linkDescription}>
                 Una novela gráfica interactiva sobre exploración espacial y propósito.
               </span>
-            </Link>
-          </li>
-          {/* Puedes añadir más proyectos aquí */}
+          </Link>
         </ul>
 
         <h2 style={styles.h2}>Blog</h2>
